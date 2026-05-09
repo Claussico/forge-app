@@ -8,7 +8,7 @@ import ReportScreen from './screens/ReportScreen'
 import WeekScreen from './screens/WeekScreen'
 
 export default function App() {
-  const { session, loading, signInWithMagicLink } = useAuth()
+  const { session, loading, signInWithPassword } = useAuth()
   const [route, setRoute] = useState('home')
 
   if (loading) {
@@ -20,7 +20,7 @@ export default function App() {
   }
 
   if (!session) {
-    return <LoginScreen onSignIn={signInWithMagicLink} />
+    return <LoginScreen onSignIn={signInWithPassword} />
   }
 
   let screen

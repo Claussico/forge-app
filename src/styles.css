@@ -67,9 +67,13 @@ html, body, #root {
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
+  /* Safe areas iOS: aplicar al root para que afecte a toda la app de una vez,
+     en lugar de depender de cada screen (los screens usan style={padding} inline
+     que machaca el padding-top del className .safe-top). */
+  padding-top: env(safe-area-inset-top);
 }
 
-/* Safe areas iOS */
+/* Safe areas iOS (helpers que aún se usan en algunos sitios sticky-bottom) */
 .safe-top { padding-top: env(safe-area-inset-top); }
 .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
 

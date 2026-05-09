@@ -247,6 +247,10 @@ html, body, #root {
   border-top: 1px solid var(--border-1);
   padding-bottom: env(safe-area-inset-bottom);
   flex-shrink: 0;
+  /* content-box para que height sea solo del area de iconos y el padding-bottom
+     (safe-area iOS) se sume al alto total en lugar de comerse el espacio interno
+     y empujar los iconos sobre el border-top. */
+  box-sizing: content-box;
 }
 
 .navbar-item {

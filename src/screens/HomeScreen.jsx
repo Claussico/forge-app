@@ -43,6 +43,47 @@ function formatDateLong(dateStr) {
     .replace('.', '').toUpperCase()
 }
 
+// ============================================================
+// Resolución de la propuesta de carga para el header del ejercicio.
+// Jerarquía:
+//   1. exercise.loading_type explícito (Magnus lo mete en el JSONB)
+//   2. Heurística por nombre: si matchea palabras BW → asume bw
+//   3. Default → "calibrate" (Magnus quiere que el atleta encuentre la carga)
+// ============================================================
+
+const BW_KEYWORDS = [
+  'dominada', 'dominadas', 'pull-up', 'pull up', 'pullup',
+  'fondos', 'fondo', 'dip', 'dips',
+  'push-up', 'push up', 'flexión', 'flexion', 'flexiones',
+  'plancha', 'plank', 'hollow', 'l-sit',
+  'chin-up', 'chin up', 'chinup', 'muscle-up', 'muscle up',
+  'pistola', 'pistol squat'
+]
+
+function resolveLoadingType(exercise) {
+  if (exercise.loading_type) return exercise.loading_type
+  const nameLower = (exercise.name || '').toLowerCase()
+  if (BW_KEYWORDS.some(kw => nameLower.includes(kw))) return 'bw'
+  return 'calibrate'
+}
+
+function formatLoadProposal(exercise) {
+  const target = exercise.target || {}
+  const lt = resolveLoadingType(exercise)
+  const w = target.weight_kg ?? target.weight ?? null
+
+  if (lt === 'bw') return 'BW'
+  if (lt === 'bodyweight_time') return 'BW'
+  if (lt === 'bw_weighted') {
+    if (w && Number(w) > 0) return `BW + ${w} kg`
+    return 'BW + lastre'
+  }
+  if (lt === 'calibrate') return 'calibrar'
+  // weighted (o fallback con peso)
+  if (w && Number(w) > 0) return `${w} kg propuesto`
+  return 'calibrar'
+}
+
 export default function HomeScreen({ onGoToCheckin }) {
   const [briefing, setBriefing] = useState(null)
   const [checkin, setCheckin] = useState(null)
@@ -125,7 +166,10 @@ export default function HomeScreen({ onGoToCheckin }) {
   const goPrev = () => setSelectedDate(d => shiftDate(d, -1))
   const goNext = () => {
     const next = shiftDate(selectedDate, 1)
-    if (!isFutureDate(next)) setSelectedDate(next)
+    // Tope razonable: 14 días en el futuro. Más allá no aporta valor operativo
+    // y evita que el usuario navegue a la infinitud por accidente.
+    const maxFuture = shiftDate(todayStr(), 14)
+    if (next <= maxFuture) setSelectedDate(next)
   }
   const goToday = () => setSelectedDate(todayStr())
 
@@ -183,7 +227,9 @@ export default function HomeScreen({ onGoToCheckin }) {
   }
 
   const isToday = selectedDate === todayStr()
-  const isFuture = isFutureDate(shiftDate(selectedDate, 1)) // si el siguiente día es futuro, no podemos avanzar
+  const isFuture = isFutureDate(selectedDate)
+  // Habilitar/deshabilitar flecha derecha por tope, no por "no ir a futuro"
+  const atMaxFuture = selectedDate >= shiftDate(todayStr(), 14)
 
   return (
     <div className="screen">
@@ -196,6 +242,7 @@ export default function HomeScreen({ onGoToCheckin }) {
           selectedDate={selectedDate}
           isToday={isToday}
           isFuture={isFuture}
+          atMaxFuture={atMaxFuture}
           goPrev={goPrev}
           goNext={goNext}
           goToday={goToday}
@@ -228,6 +275,7 @@ export default function HomeScreen({ onGoToCheckin }) {
                 onToggle={() => setExpandedIdx(expandedIdx === exIdx ? -1 : exIdx)}
                 onUpdateSet={(setIdx, field, value) => updateSet(exIdx, setIdx, field, value)}
                 onToggleDone={(setIdx) => toggleDone(exIdx, setIdx)}
+                readOnly={isFuture}
               />
             )
           ))
@@ -236,8 +284,8 @@ export default function HomeScreen({ onGoToCheckin }) {
         {error && <div style={{ color: 'var(--err)', fontSize: 12, marginTop: 16, padding: '0 8px' }}>{error}</div>}
       </div>
 
-      {/* Footer solo si hay sesión editable */}
-      {!existingLog && session && exercises.length > 0 && (
+      {/* Footer solo si hay sesión editable (no futuro, no ya logueada) */}
+      {!existingLog && session && exercises.length > 0 && !isFuture && (
         <div style={{
           position: 'sticky', bottom: 0, left: 0, right: 0,
           padding: '12px 16px',
@@ -259,7 +307,7 @@ export default function HomeScreen({ onGoToCheckin }) {
 
 function Header({
   briefing, checkin, onGoToCheckin,
-  selectedDate, isToday, isFuture, goPrev, goNext, goToday,
+  selectedDate, isToday, isFuture, atMaxFuture, goPrev, goNext, goToday,
   totalSets, doneSets, existingLog, session
 }) {
   const dateStr = formatDateLong(selectedDate)
@@ -312,11 +360,11 @@ function Header({
 
         <button
           onClick={goNext}
-          disabled={isFuture}
+          disabled={atMaxFuture}
           style={{
             background: 'transparent', border: 'none',
-            color: isFuture ? 'var(--text-4)' : 'var(--text-2)',
-            cursor: isFuture ? 'not-allowed' : 'pointer',
+            color: atMaxFuture ? 'var(--text-4)' : 'var(--text-2)',
+            cursor: atMaxFuture ? 'not-allowed' : 'pointer',
             padding: '4px 8px', display: 'flex', alignItems: 'center'
           }}
           aria-label="Día siguiente"
@@ -331,9 +379,24 @@ function Header({
           Sesión registrada
         </h1>
       ) : session ? (
-        <h1 className="h1" style={{ marginBottom: 4, fontWeight: 600 }}>
-          {session.session_name}
-        </h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4, flexWrap: 'wrap' }}>
+          <h1 className="h1" style={{ margin: 0, fontWeight: 600 }}>
+            {session.session_name}
+          </h1>
+          {isFuture && (
+            <span style={{
+              fontFamily: 'var(--ff-mono)', fontSize: 9,
+              letterSpacing: '0.12em', color: 'var(--accent-hi)',
+              textTransform: 'uppercase',
+              padding: '3px 7px',
+              border: '1px solid var(--accent-border)',
+              background: 'var(--accent-bg)',
+              borderRadius: 4
+            }}>
+              PRÓXIMA
+            </span>
+          )}
+        </div>
       ) : (
         <h1 className="h1" style={{ marginBottom: 4, fontWeight: 600, color: 'var(--text-3)' }}>
           Sin sesión
@@ -349,8 +412,8 @@ function Header({
         </div>
       )}
 
-      {/* Series progress */}
-      {!existingLog && totalSets > 0 && (
+      {/* Series progress: solo en hoy (en futuro no procede) */}
+      {!existingLog && !isFuture && totalSets > 0 && (
         <div style={{
           fontFamily: 'var(--ff-mono)', fontSize: 10.5,
           color: 'var(--text-3)', marginBottom: 10
@@ -499,10 +562,11 @@ function ReadOnlyView({ log, exerciseLogs }) {
   )
 }
 
-function ExerciseCard({ exercise, expanded, onToggle, onUpdateSet, onToggleDone }) {
+function ExerciseCard({ exercise, expanded, onToggle, onUpdateSet, onToggleDone, readOnly = false }) {
   const doneCount = exercise.sets.filter(s => s.done).length
   const totalCount = exercise.sets.length
   const target = exercise.target || {}
+  const loadProposal = formatLoadProposal(exercise)
 
   return (
     <div className="card" style={{ marginBottom: 12 }}>
@@ -510,26 +574,35 @@ function ExerciseCard({ exercise, expanded, onToggle, onUpdateSet, onToggleDone 
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '14px 16px', cursor: 'pointer'
       }} onClick={onToggle}>
-        <div>
+        <div style={{ minWidth: 0, flex: 1 }}>
           <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-0)' }}>
             {exercise.name}
           </div>
+          {/* Metadata principal: series × reps · RPE */}
           <div style={{
             fontFamily: 'var(--ff-mono)', fontSize: 11,
             color: 'var(--text-3)', marginTop: 2
           }}>
             {target.sets || totalCount}×{target.reps || '?'}
-            {target.weight ? ` @ ${target.weight}kg` : ''}
             {target.rpe ? ` · RPE ${target.rpe}` : ''}
           </div>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {/* Carga propuesta (resaltada en verde, línea separada) */}
           <div style={{
-            fontFamily: 'var(--ff-mono)', fontSize: 13,
-            color: doneCount === totalCount ? 'var(--accent)' : 'var(--text-2)'
+            fontFamily: 'var(--ff-mono)', fontSize: 11,
+            color: 'var(--accent-hi)', marginTop: 2
           }}>
-            {doneCount}/{totalCount}
+            {loadProposal}
           </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          {!readOnly && (
+            <div style={{
+              fontFamily: 'var(--ff-mono)', fontSize: 13,
+              color: doneCount === totalCount ? 'var(--accent)' : 'var(--text-2)'
+            }}>
+              {doneCount}/{totalCount}
+            </div>
+          )}
           {expanded ? <Icon.chevUp /> : <Icon.chevDown />}
         </div>
       </div>
@@ -537,7 +610,8 @@ function ExerciseCard({ exercise, expanded, onToggle, onUpdateSet, onToggleDone 
       {expanded && (
         <div style={{ borderTop: '1px solid var(--border-1)' }}>
           <div style={{
-            display: 'grid', gridTemplateColumns: '32px 1fr 1fr 1fr 44px',
+            display: 'grid',
+            gridTemplateColumns: readOnly ? '32px 1fr 1fr 1fr' : '32px 1fr 1fr 1fr 44px',
             gap: 8, padding: '10px 12px 6px',
             fontFamily: 'var(--ff-mono)', fontSize: 9,
             letterSpacing: '0.1em', color: 'var(--text-4)',
@@ -547,7 +621,7 @@ function ExerciseCard({ exercise, expanded, onToggle, onUpdateSet, onToggleDone 
             <div style={{ textAlign: 'center' }}>Kg</div>
             <div style={{ textAlign: 'center' }}>Reps</div>
             <div style={{ textAlign: 'center' }}>RPE</div>
-            <div />
+            {!readOnly && <div />}
           </div>
 
           {exercise.sets.map((s, i) => (
@@ -555,6 +629,7 @@ function ExerciseCard({ exercise, expanded, onToggle, onUpdateSet, onToggleDone 
               key={i}
               set={s}
               index={i}
+              readOnly={readOnly}
               onChange={(field, value) => onUpdateSet(i, field, value)}
               onToggleDone={() => onToggleDone(i)}
             />
@@ -565,11 +640,12 @@ function ExerciseCard({ exercise, expanded, onToggle, onUpdateSet, onToggleDone 
   )
 }
 
-function SetRow({ set, index, onChange, onToggleDone }) {
-  const locked = set.done
+function SetRow({ set, index, onChange, onToggleDone, readOnly = false }) {
+  const locked = set.done || readOnly
   return (
     <div style={{
-      display: 'grid', gridTemplateColumns: '32px 1fr 1fr 1fr 44px',
+      display: 'grid',
+      gridTemplateColumns: readOnly ? '32px 1fr 1fr 1fr' : '32px 1fr 1fr 1fr 44px',
       gap: 8, padding: '8px 12px',
       alignItems: 'center',
       borderTop: index > 0 ? '1px solid var(--border-1)' : 'none',
@@ -603,20 +679,22 @@ function SetRow({ set, index, onChange, onToggleDone }) {
         onChange={(e) => onChange('rpe', e.target.value)}
         readOnly={locked}
       />
-      <button
-        onClick={onToggleDone}
-        style={{
-          width: 32, height: 32, padding: 0,
-          background: locked ? 'var(--accent-bg-hi)' : 'transparent',
-          border: `1px solid ${locked ? 'var(--accent)' : 'var(--border-0)'}`,
-          borderRadius: 6, cursor: 'pointer',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: locked ? 'var(--accent-hi)' : 'var(--text-3)',
-          justifySelf: 'end'
-        }}
-      >
-        {locked && <Icon.check />}
-      </button>
+      {!readOnly && (
+        <button
+          onClick={onToggleDone}
+          style={{
+            width: 32, height: 32, padding: 0,
+            background: set.done ? 'var(--accent-bg-hi)' : 'transparent',
+            border: `1px solid ${set.done ? 'var(--accent)' : 'var(--border-0)'}`,
+            borderRadius: 6, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: set.done ? 'var(--accent-hi)' : 'var(--text-3)',
+            justifySelf: 'end'
+          }}
+        >
+          {set.done && <Icon.check />}
+        </button>
+      )}
     </div>
   )
 }

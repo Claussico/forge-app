@@ -84,6 +84,80 @@ function formatLoadProposal(exercise) {
   return 'calibrar'
 }
 
+// ============================================================
+// Persistencia del borrador de sesión en curso.
+// El estado de logging vive en React (memoria). iOS mata la PWA
+// en background y al reabrir se pierde todo lo tecleado. Guardamos
+// el borrador por fecha en localStorage y lo rehidratamos al montar.
+// ============================================================
+
+const DRAFT_PREFIX = 'forge:draft:'
+
+function draftKey(date) {
+  return DRAFT_PREFIX + date
+}
+
+function loadDraft(date) {
+  try {
+    const raw = localStorage.getItem(draftKey(date))
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    return null
+  }
+}
+
+function saveDraft(date, exercises) {
+  try {
+    localStorage.setItem(draftKey(date), JSON.stringify(exercises))
+  } catch {
+    // Safari en modo privado o cuota llena: ignoramos, no es crítico
+  }
+}
+
+function clearDraft(date) {
+  try {
+    localStorage.removeItem(draftKey(date))
+  } catch {
+    // no-op
+  }
+}
+
+// Fusiona el borrador guardado sobre la sesión programada, casando por
+// nombre de ejercicio y número de serie. Preserva lo tecleado (peso,
+// reps, rpe, done) y añade al final los ejercicios ad-hoc que estén en
+// el borrador pero no en la sesión programada (soporte para editar
+// ejercicios en sesión).
+function mergeDraft(prepared, draft) {
+  if (!Array.isArray(draft)) return prepared
+  const draftByName = {}
+  draft.forEach(d => { if (d && d.name) draftByName[d.name] = d })
+
+  const merged = prepared.map(ex => {
+    const d = draftByName[ex.name]
+    if (!d || !Array.isArray(d.sets)) return ex
+    return {
+      ...ex,
+      sets: ex.sets.map((st, i) => {
+        const ds = d.sets[i]
+        if (!ds) return st
+        return {
+          ...st,
+          weight_kg: ds.weight_kg ?? st.weight_kg,
+          reps: ds.reps ?? st.reps,
+          rpe: ds.rpe ?? st.rpe,
+          done: !!ds.done
+        }
+      })
+    }
+  })
+
+  const preparedNames = new Set(prepared.map(e => e.name))
+  draft.forEach(d => {
+    if (d && d.name && !preparedNames.has(d.name)) merged.push(d)
+  })
+  return merged
+}
+
 export default function HomeScreen({ onGoToCheckin }) {
   const [briefing, setBriefing] = useState(null)
   const [checkin, setCheckin] = useState(null)
@@ -99,6 +173,7 @@ export default function HomeScreen({ onGoToCheckin }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
 
   // Carga inicial: briefing y checkin (no dependen de fecha)
   useEffect(() => {
@@ -114,6 +189,14 @@ export default function HomeScreen({ onGoToCheckin }) {
   useEffect(() => {
     loadDateData(selectedDate)
   }, [selectedDate])
+
+  // Persistir el borrador en cada cambio, solo si hay sesión editable
+  // (no logueada, no futura). Así sobrevive a que iOS mate la PWA.
+  useEffect(() => {
+    if (loading || existingLog || !session || isFutureDate(selectedDate)) return
+    if (exercises.length === 0) return
+    saveDraft(selectedDate, exercises)
+  }, [exercises, loading, existingLog, session, selectedDate])
 
   const loadDateData = async (date) => {
     setLoading(true)
@@ -138,16 +221,20 @@ export default function HomeScreen({ onGoToCheckin }) {
           ...ex,
           sets: (ex.sets || []).map((st, i) => ({
             set_number: st.set_number || i + 1,
-            weight_kg: st.weight_kg ?? ex.target?.weight ?? 0,
+            weight_kg: st.weight_kg ?? ex.target?.weight_kg ?? ex.target?.weight ?? 0,
             reps: st.reps ?? ex.target?.reps ?? 0,
             rpe: st.rpe ?? ex.target?.rpe ?? null,
             done: false
           }))
         }))
-        setExercises(prepared)
+        // Rehidratar borrador si existe para esta fecha (recupera lo
+        // tecleado tras cerrar/bloquear la app)
+        const draft = loadDraft(date)
+        const restored = draft ? mergeDraft(prepared, draft) : prepared
+        setExercises(restored)
         setExistingExerciseLogs([])
         // Expandir el primer ejercicio rellenable (saltando bloques de info como calentamiento)
-        const firstEditable = prepared.findIndex(ex => ex.sets && ex.sets.length > 0)
+        const firstEditable = restored.findIndex(ex => ex.sets && ex.sets.length > 0)
         setExpandedIdx(firstEditable >= 0 ? firstEditable : 0)
         return
       } else {
@@ -192,6 +279,7 @@ export default function HomeScreen({ onGoToCheckin }) {
 
   const finishSession = async () => {
     if (doneSets === 0) return
+    setShowConfirm(false)
     setSaving(true)
     try {
       const toSave = exercises.map(ex => ({
@@ -217,6 +305,8 @@ export default function HomeScreen({ onGoToCheckin }) {
         exercises: toSave
       })
 
+      // Guardado OK: el borrador ya no hace falta
+      clearDraft(selectedDate)
       // Recargar para mostrar la sesión ya en modo lectura
       loadDateData(selectedDate)
     } catch (err) {
@@ -295,12 +385,74 @@ export default function HomeScreen({ onGoToCheckin }) {
           <button
             className="btn btn--primary btn--block btn--lg"
             disabled={doneSets === 0 || saving}
-            onClick={finishSession}
+            onClick={() => setShowConfirm(true)}
           >
             {saving ? 'Guardando…' : `Finalizar sesión · ${doneSets}/${totalSets} series`}
           </button>
         </div>
       )}
+
+      {showConfirm && (
+        <ConfirmFinish
+          doneSets={doneSets}
+          totalSets={totalSets}
+          onCancel={() => setShowConfirm(false)}
+          onConfirm={finishSession}
+        />
+      )}
+    </div>
+  )
+}
+
+function ConfirmFinish({ doneSets, totalSets, onCancel, onConfirm }) {
+  const partial = doneSets < totalSets
+  return (
+    <div
+      onClick={onCancel}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.6)',
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center'
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          width: '100%', maxWidth: 480,
+          background: 'var(--bg-1)',
+          borderTop: '1px solid var(--border-0)',
+          borderTopLeftRadius: 'var(--r-lg)', borderTopRightRadius: 'var(--r-lg)',
+          padding: '20px 16px calc(20px + env(safe-area-inset-bottom))'
+        }}
+      >
+        <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--text-0)', marginBottom: 6 }}>
+          ¿Finalizar la sesión?
+        </div>
+        <div style={{
+          fontSize: 13, color: partial ? 'var(--warn)' : 'var(--text-2)',
+          marginBottom: 18, lineHeight: 1.5
+        }}>
+          {partial
+            ? `Vas por ${doneSets} de ${totalSets} series. Al finalizar se guardan solo las marcadas y la sesión queda cerrada en solo lectura, sin vuelta atrás.`
+            : `Se guardarán las ${doneSets} series y la sesión quedará en solo lectura.`}
+        </div>
+        <div style={{ display: 'flex', gap: 10 }}>
+          <button
+            className="btn btn--block btn--lg"
+            onClick={onCancel}
+            style={{ flex: 1 }}
+          >
+            Cancelar
+          </button>
+          <button
+            className="btn btn--primary btn--block btn--lg"
+            onClick={onConfirm}
+            style={{ flex: 1 }}
+          >
+            Finalizar
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

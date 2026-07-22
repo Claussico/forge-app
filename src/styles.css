@@ -284,3 +284,32 @@ html, body, #root {
   font-family: var(--ff-mono);
   font-size: 12px;
 }
+
+/* ============================================================
+   Fallback de orientación vertical.
+   El manifest ya declara orientation:portrait, pero iOS no lo
+   respeta de forma fiable en PWA. Este overlay solo aparece en
+   horizontal de móvil (viewport bajo), no en tablet/escritorio.
+   ============================================================ */
+#orient-lock {
+  display: none;
+}
+
+@media screen and (orientation: landscape) and (max-height: 500px) {
+  #orient-lock {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+    background: var(--bg-0);
+    color: var(--text-2);
+    font-family: var(--ff-mono);
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+}

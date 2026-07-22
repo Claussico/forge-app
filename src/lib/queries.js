@@ -1,6 +1,17 @@
 import { supabase } from './supabase'
 
 /**
+ * Fecha de HOY en zona local (YYYY-MM-DD), sin pasar por UTC.
+ * toISOString() devuelve UTC y en España (UTC+1/+2) de madrugada
+ * desplaza el día, guardando check-ins/logs con fecha corrida.
+ */
+function todayLocal() {
+  const d = new Date()
+  const p = n => (n < 10 ? '0' + n : '' + n)
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+}
+
+/**
  * Briefing del usuario logueado. Ahora incluye últimas medidas y último reporte.
  */
 export async function fetchBriefing() {
@@ -30,7 +41,7 @@ export async function fetchProfile() {
  * Sesión programada para una fecha (default: hoy).
  */
 export async function fetchTodaySession(date = null) {
-  const targetDate = date || new Date().toISOString().split('T')[0]
+  const targetDate = date || todayLocal()
   const { data, error } = await supabase
     .from('programmed_sessions')
     .select('*')
@@ -46,7 +57,7 @@ export async function fetchTodaySession(date = null) {
  * Ahora ordena por recorded_at desc porque permitimos múltiples por día.
  */
 export async function fetchTodayCheckin() {
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayLocal()
   const { data, error } = await supabase
     .from('daily_checkins')
     .select('*')
@@ -96,7 +107,7 @@ export async function saveCheckin(payload) {
   const profile = await fetchProfile()
   if (!profile) throw new Error('Perfil no encontrado')
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayLocal()
   const row = {
     profile_id: profile.id,
     date: today,
@@ -121,7 +132,7 @@ export async function saveTrainingLog({ session, exercises }) {
   const profile = await fetchProfile()
   if (!profile) throw new Error('Perfil no encontrado')
 
-  const performedDate = session.performed_date || new Date().toISOString().split('T')[0]
+  const performedDate = session.performed_date || todayLocal()
 
   const { data: trainingLog, error: tlErr } = await supabase
     .from('training_logs')
@@ -191,7 +202,7 @@ export async function fetchWeekSummary() {
   if (sessErr) throw sessErr
 
   // Contar sesiones programadas en los últimos 7 días (no hardcodear 4)
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayLocal()
   const { count: plannedCount, error: plannedErr } = await supabase
     .from('programmed_sessions')
     .select('*', { count: 'exact', head: true })
@@ -271,7 +282,7 @@ export async function saveBodyMeasurements(payload) {
   const profile = await fetchProfile()
   if (!profile) throw new Error('Perfil no encontrado')
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayLocal()
   const row = {
     profile_id: profile.id,
     date: today,
@@ -322,7 +333,7 @@ export async function saveWeeklyReport({ report, measurements }) {
     measurementId = measureRow.id
   }
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = todayLocal()
   const reportRow = {
     profile_id: profile.id,
     date: today,

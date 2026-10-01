@@ -1,12 +1,12 @@
 # FORGE — Cambios del front (pasos 5–7 del refactor)
 
-Especificación para ejecutar en el repo forge-app con Claude Code. La base de datos ya está preparada (migraciones aplicadas el 2026-09-30). Este documento describe qué ha cambiado y qué tiene que hacer la PWA.
+Especificación para ejecutar en el repo `forge-app` con Claude Code. La base de datos ya está preparada (migraciones aplicadas el 2026-09-30). Este documento describe qué ha cambiado y qué tiene que hacer la PWA.
 
 ## 0. Contexto que no hay que romper
 
-- El front escribe siempre como usuario autenticado (rol `authenticated`), con la clave anon y la sesión del usuario. No uses nunca la clave `service_role` en el cliente.
+- El front escribe siempre como usuario autenticado (rol `authenticated`), con la clave anon y la sesión del usuario. **No uses nunca la clave `service_role` en el cliente.**
 - La base de datos tiene guardas que bloquean escrituras del rol `postgres` en las tablas de input del front. No afectan al front, pero explican por qué las correcciones manuales en el Table Editor de Supabase fallan: se hacen por SQL con `select set_config('forge.maintenance','on',true);` en la misma transacción.
-- Varios triggers trabajan solos. No repliques su lógica en el front:
+- Varios triggers trabajan solos. **No repliques su lógica en el front**:
   - `exercise_logs.exercise_id` se rellena a partir de `exercise_name`.
   - `programmed_sessions.status` pasa a `done` al insertar un `training_logs` o un `external_load` con `programmed_session_id`.
 
@@ -42,7 +42,7 @@ Tabla nueva. Formulario para registrar una actividad fuera de las sesiones de fu
 - Vista de la semana en curso del bloque: `programmed_sessions` entre las fechas de la semana, ordenadas por fecha, con `session_name` y un indicador de `status` (`planned`, `done`, `skipped`, `moved`) y `status_note` si existe.
 - Semana y fechas: `current_state.current_block_week` (lo sincroniza un job diario) y `program_blocks.start_date` del bloque activo. Ventana de la semana N: de `start_date + 7·(N−1)` a `start_date + 7·N − 1`.
 - Acción "Omitir" sobre una sesión `planned`: `status = 'skipped'` y `status_note` con un motivo opcional.
-- El front no marca `done`: lo hace el trigger al registrar la sesión.
+- **El front no marca `done`**: lo hace el trigger al registrar la sesión.
 - Sesiones de carrera (`session_name` "Carrera"): muestran `execution_notes` y la duración objetivo. Al pulsarlas se abre el formulario del punto 1 con `programmed_session_id` rellenado.
 
 ## 4. Selector de ejercicios del catálogo — recomendado
@@ -59,9 +59,9 @@ Tabla nueva. Formulario para registrar una actividad fuera de las sesiones de fu
 
 - `pattern` admite `jump` y `locomotion` además de los valores anteriores.
 - `muscle_groups` puede contener `core` y puede venir vacío (`[]`) en saltos y carrera.
-- `loading_type` `bodyweight_time`: reps son minutos.
+- `loading_type` `bodyweight_time`: `reps` son minutos.
 - En ejercicios `bw`, el peso puede ir vacío o a 0 sin que la interfaz lo trate como error.
-- Saltos: se registran como `exercise_logs` con reps = contactos por serie y sin peso.
+- Saltos: se registran como `exercise_logs` con `reps` = contactos por serie y sin peso.
 
 ## 6. RPE en las series efectivas — recomendado
 
@@ -69,10 +69,10 @@ Las vistas de volumen solo cuentan series con RPE ≥ 6 o RIR ≤ 4. Una serie e
 
 ## 7. Copia de seguridad — tarea puntual
 
-Haz un `pg_dump` de la base de datos de producción y guárdalo fuera del repo:
+Haz un `pg_dump` de la base de datos de producción y guárdalo **fuera del repo**:
 
 - Esquemas `public`, `forge_sys`, `snap_20260930` y `supabase_migrations`, en formato custom (`-Fc`) y con `--no-owner`.
-- Conexión: la cadena "Session pooler" del botón Connect del dashboard. Necesita `pg_dump` 17 o superior.
+- Conexión: la cadena "Session pooler" del botón Connect del dashboard. Necesita pg_dump 17 o superior.
 
 ## 8. Guardado atómico de la sesión (`save_training_log`) — imprescindible (fase 3)
 
@@ -106,12 +106,44 @@ Payload:
 }
 ```
 
-- `client_id`: se genera una vez por sesión (`crypto.randomUUID()`) y se guarda con el borrador. Si el envío se reintenta con el mismo `client_id`, la RPC devuelve la sesión ya guardada con `duplicate: true` y no crea otra. Es lo que hace segura la cola sin conexión: se puede reenviar sin miedo a duplicar.
-- `exercise_id`, `movement_pattern` y `muscle_groups`: opcionales. Si no se envían, la base de datos los rellena a partir del nombre y del catálogo.
-- Obligatorios: `performed_date` en fecha local (no `toISOString`), y en cada serie `exercise_name`, `set_number` y `reps`. Si falta algo, la RPC devuelve error y no guarda nada.
-- `issues`: `intensity` de 1 a 3.
-- Sesión programada: si se envía `programmed_session_id`, la sesión pasa a `done` automáticamente.
-- Cola sin conexión: guarda el payload completo en IndexedDB y reenvíalo tal cual al recuperar la conexión, hasta recibir respuesta sin error.
+- **`client_id`**: se genera una vez por sesión (`crypto.randomUUID()`) y se guarda con el borrador. Si el envío se reintenta con el mismo `client_id`, la RPC devuelve la sesión ya guardada con `duplicate: true` y no crea otra. Es lo que hace segura la cola sin conexión: se puede reenviar sin miedo a duplicar.
+- **`exercise_id`, `movement_pattern` y `muscle_groups`**: opcionales. Si no se envían, la base de datos los rellena a partir del nombre y del catálogo.
+- **Obligatorios**: `performed_date` en fecha local (no `toISOString`), y en cada serie `exercise_name`, `set_number` y `reps`. Si falta algo, la RPC devuelve error y no guarda nada.
+- **`issues`**: `intensity` de 1 a 3.
+- **Sesión programada**: si se envía `programmed_session_id`, la sesión pasa a `done` automáticamente.
+- **Cola sin conexión**: guarda el payload completo en IndexedDB y reenvíalo tal cual al recuperar la conexión, hasta recibir respuesta sin error.
+
+## 9. Tipos de sesión y movilidad guiada — imprescindible (fase 3)
+
+- `programmed_sessions.session_type`: `strength`, `power`, `run`, `mobility`, `flow`, `tests` u `other`.
+- **Sesiones `mobility` y `flow`**: reproductor guiado.
+  - Cada ejercicio trae en `target` `{"sets": n, "seconds": n, "per_side": true|false}`. `seconds` es la duración de cada serie en cada lado. Con `per_side: true`, el reproductor cronometra primero un lado y luego el otro en cada serie.
+  - Un temporizador por estiramiento, con vibración al cambiar de lado y de ejercicio.
+  - La dosis por zona del briefing (`mobility_week.dose_by_zone[].minutes`) es **por músculo estirado**, no tiempo de sesión: 2 × 60 s por lado son 2 minutos para cada isquio, aunque la sesión dure 4. Muéstrala así ("min por lado" cuando la zona es bilateral) y compárala con `target_min`, que está en la misma unidad.
+  - Los ejercicios con `reps` en lugar de `seconds` (elevaciones de tibial o de sóleo) se muestran como contador.
+- **Registro**: un solo botón "Hecha", más una nota opcional. Se guarda con `save_training_log` sin series:
+  `{ "client_id", "performed_date", "programmed_session_id", "session_type": "mobility", "notes" }`.
+  No se registra nada por ejercicio: la base de datos calcula la dosis a partir de lo prescrito.
+- **Separación de la fuerza**: estas sesiones no cuentan como sesiones de fuerza en Hoy ni en Semana. El briefing ya las separa (`mobility_week`).
+
+## 10. Tests de rendimiento (`performance_tests`) — imprescindible (fase 3)
+
+- Catálogo de solo lectura: `performance_test_catalog`, con `code`, `name`, `category`, `unit`, `higher_is_better`, `sided` y `protocol`.
+- **Pantalla de tests** dentro de Registrar:
+  - Elegir el test y mostrar su `protocol`.
+  - Introducir `value`. Si `sided` es true, pedir izquierda y derecha; son dos filas con `side` `L` y `R`.
+  - `reps_fixed_load`: además, el ejercicio del catálogo (`exercise_id`) y la carga (`load_kg`).
+  - `flow_skill`: conseguido o no conseguido (1/0), con el hito en `notes`.
+- **Progreso**: evolución de cada test en el tiempo, por lado cuando aplique.
+
+## 11. Convenciones de la consola de sesión — imprescindible (fase 3)
+
+- **Unilaterales** (`laterality = unilateral`): una fila por serie con la etiqueta "reps por lado". Si solo se trabaja un lado, selector de lado (L o R) en `side`. Nunca dos filas por serie: duplicaría el volumen.
+- **Saltos** (`pattern = jump`): sin RPE. El botón "Hecho" registra la serie, las reps se llaman "contactos" y no hay campo de peso.
+- **`bodyweight_time`**: la etiqueta es minutos o segundos.
+- **RPE**: nunca se precarga ni se guarda por defecto. Si no se pulsa, va como `null`. La RPC marca la fiabilidad sola: `reported` si hay RPE.
+- **"Última vez"**: muestra el RPE solo si `exercise_logs.rpe_reliability = 'reported'`. En el resto de casos, solo carga × reps.
+- **Sesión atrasada**: al registrar una sesión planificada pasada, preguntar "¿Cuándo la hiciste?" (Hoy, Ayer u Otra fecha) y guardarla como `performed_date`, en hora local.
 
 ## Pruebas de aceptación
 

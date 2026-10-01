@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Wordmark } from '../components/UI'
 
 export default function LoginScreen({ onSignIn }) {
   const [email, setEmail] = useState('')
@@ -7,100 +6,38 @@ export default function LoginScreen({ onSignIn }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const submit = async () => {
+  async function submit(e) {
+    e.preventDefault()
     setError('')
-    if (!email.includes('@')) {
-      setError('Email no válido')
-      return
-    }
-    if (!password) {
-      setError('Introduce la contraseña')
-      return
-    }
+    if (!email.includes('@')) return setError('Email no válido')
+    if (!password) return setError('Introduce la contraseña')
     setLoading(true)
     try {
       await onSignIn(email, password)
-      // Si no lanza, useAuth pillará el cambio de sesión y App.jsx renderizará HomeScreen
     } catch (err) {
-      // Mensaje genérico — Supabase devuelve "Invalid login credentials" para
-      // todo (email no existe, password mal). No filtramos qué falló por seguridad.
-      const msg = err?.message || ''
-      if (msg.toLowerCase().includes('invalid')) {
-        setError('Credenciales incorrectas')
-      } else {
-        setError(msg || 'Error iniciando sesión')
-      }
+      // Supabase responde "Invalid login credentials" para todo: no se distingue qué falló.
+      setError(/invalid/i.test(err?.message || '') ? 'Email o contraseña incorrectos' : (err?.message || 'No se pudo entrar'))
     } finally {
       setLoading(false)
     }
   }
 
-  // Permite enviar con Enter desde cualquier input
-  const onKeyDown = (e) => {
-    if (e.key === 'Enter' && !loading) submit()
-  }
-
   return (
-    <div className="screen" style={{ background: 'var(--bg-0)' }}>
-      <div className="screen-body safe-top" style={{ padding: '88px 28px 28px', display: 'flex', flexDirection: 'column' }}>
-
-        <div style={{ marginBottom: 56 }}>
-          <Wordmark size={22} />
-        </div>
-
-        <h1 className="h1" style={{ margin: '0 0 6px', fontWeight: 500 }}>
-          Entrar
-        </h1>
-        <p className="muted" style={{ margin: '0 0 28px', fontSize: 13 }}>
-          Email y contraseña.
-        </p>
-
-        <label className="label">Email</label>
-        <input
-          type="email"
-          inputMode="email"
-          autoComplete="email"
-          autoCapitalize="none"
-          autoCorrect="off"
-          spellCheck={false}
-          className="field"
-          placeholder="tucorreo@ejemplo.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          onKeyDown={onKeyDown}
-          style={{ marginBottom: 18 }}
-        />
-
-        <label className="label">Contraseña</label>
-        <input
-          type="password"
-          autoComplete="current-password"
-          className="field"
-          placeholder="••••••"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          onKeyDown={onKeyDown}
-          style={{ marginBottom: error ? 6 : 18 }}
-        />
-
-        {error && (
-          <div style={{
-            fontSize: 12, color: 'var(--err)',
-            fontFamily: 'var(--ff-mono)', marginBottom: 14
-          }}>
-            {error}
-          </div>
-        )}
-
-        <button
-          className="btn btn--primary btn--block btn--lg"
-          onClick={submit}
-          disabled={loading || !email || !password}
-        >
-          {loading ? 'Entrando…' : 'Entrar'}
-        </button>
-
+    <form className="body" style={{ paddingTop: 72 }} onSubmit={submit}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-0)', marginBottom: 32 }}>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="square" aria-hidden="true">
+          <path d="M4 9h16M6 9v3h12V9M9 12v2h6M12 9V7" />
+        </svg>
+        <span className="num" style={{ fontSize: 22, fontWeight: 500, letterSpacing: '0.15em' }}>FORGE</span>
       </div>
-    </div>
+      <h1 className="h1">Entrar</h1>
+      <label className="field"><span className="lbl">Email</span>
+        <input className="text-in" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" autoCorrect="off" spellCheck={false}
+          value={email} onChange={e => setEmail(e.target.value)} /></label>
+      <label className="field"><span className="lbl">Contraseña</span>
+        <input className="text-in" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /></label>
+      {error && <p className="err-text" role="alert">{error}</p>}
+      <button className="btn btn--primary btn--block" type="submit" disabled={loading || !email || !password}>{loading ? 'Entrando…' : 'Entrar'}</button>
+    </form>
   )
 }

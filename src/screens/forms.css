@@ -1,0 +1,17 @@
+.stack { display: flex; flex-direction: column; gap: 16px; }
+
+.tibia { padding: 14px; display: flex; flex-direction: column; gap: 8px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg-1); }
+.tibia-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.tibia-val { font-size: 28px; color: var(--text-0); line-height: 1; }
+.tibia-scale { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.tibia-scale button { min-height: 48px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-2); font-size: 16px; color: var(--text-1); }
+.tibia-scale button[aria-pressed="true"] { background: var(--text-0); color: var(--bg-0); border-color: var(--text-0); font-weight: 600; }
+.tibia-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); }
+.tibia[data-level="warn"] { border-color: color-mix(in srgb, var(--warn) 60%, transparent); background: var(--warn-soft); }
+.tibia[data-level="warn"] .tibia-val { color: var(--warn); }
+.tibia[data-level="warn"] .tibia-scale button[aria-pressed="true"] { background: var(--warn); border-color: var(--warn); color: var(--bg-0); }
+.tibia[data-level="err"] { border-color: color-mix(in srgb, var(--err) 60%, transparent); background: var(--err-soft); }
+.tibia[data-level="err"] .tibia-val { color: var(--err); }
+.tibia[data-level="err"] .tibia-scale button[aria-pressed="true"] { background: var(--err); border-color: var(--err); color: var(--bg-0); }
+
+.list-row-actions { display: flex; gap: 6px; }

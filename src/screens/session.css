@@ -1,0 +1,54 @@
+/* Sesión en curso: arriba contexto, abajo la consola fija (siempre en el mismo sitio). */
+.ses { height: 100dvh; max-height: calc(100dvh - env(safe-area-inset-top, 0px)); overflow: hidden; }
+.ses-top { display: flex; align-items: center; gap: 8px; padding: 4px 10px 8px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.ses-exit { min-height: 48px; min-width: 56px; background: none; border: 0; color: var(--text-1); font-size: 15px; text-align: left; padding: 0 6px; }
+.ses-timer { flex: 1; display: flex; flex-direction: column; align-items: center; }
+.tv-btn { background: none; border: 0; display: flex; flex-direction: column; align-items: center; min-height: 48px; color: inherit; }
+.ses-timer .tv { font-size: 28px; color: var(--text-0); line-height: 1.1; }
+.ses-timer .tl { font-size: 12px; color: var(--text-2); }
+.ses-timer.is-done .tv { color: var(--accent); }
+.ses-timer.is-done { animation: flash 0.6s ease-out 3; }
+@keyframes flash { 50% { background: var(--accent-soft); } }
+@media (prefers-reduced-motion: reduce) { .ses-timer.is-done { animation: none; } }
+.ses-prog { min-width: 56px; text-align: right; color: var(--text-2); font-size: 14px; }
+
+.ses-ctx { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; min-height: 0; }
+.ses-name { font-size: 22px; color: var(--text-0); font-weight: 600; line-height: 1.2; text-wrap: balance; }
+.ses-of { font-size: 15px; color: var(--text-1); }
+.ses-of .num { color: var(--text-0); }
+.ses-ref { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; color: var(--text-2); }
+.ses-ref dd { color: var(--text-1); }
+.ses-links { display: flex; gap: 8px; flex-wrap: wrap; }
+.ses-links button { min-height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--text-1); font-size: 14px; }
+.ses-notes { font-size: 14px; color: var(--text-1); background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; white-space: pre-wrap; }
+.ses-done { list-style: none; display: flex; flex-direction: column; gap: 2px; font-size: 14px; }
+.ses-done li { display: flex; justify-content: space-between; gap: 12px; color: var(--text-2); }
+.ses-done li .num { white-space: nowrap; }
+.ses-done .num { color: var(--text-1); }
+
+.console { flex-shrink: 0; border-top: 1px solid var(--line); background: var(--bg-1); padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; }
+.console-big { min-height: 64px; font-size: 18px; }
+.stepper { display: grid; grid-template-columns: 92px 56px 1fr 56px; align-items: center; gap: 6px; }
+.stepper .sl { font-size: 13px; color: var(--text-2); line-height: 1.2; }
+.stepper button { min-height: 52px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg-2); font-size: 24px; color: var(--text-0); }
+.stepper .sv { width: 100%; min-width: 0; text-align: center; font-size: 28px; color: var(--text-0); background: transparent; border: 0; border-radius: 8px; min-height: 52px; outline: 0; }
+.stepper .sv:focus { background: var(--bg-2); box-shadow: inset 0 0 0 1px var(--accent); }
+.side-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.side-row .chip { padding: 0 6px; font-size: 14px; }
+.rpe-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-2); }
+.rpe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rpe-grid button { min-height: 56px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg-2); font-size: 21px; color: var(--text-0); }
+.rpe-grid button:active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.ses-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+.ses-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ses-table th { text-align: left; font-weight: 500; color: var(--text-2); font-size: 13px; padding: 6px 4px; }
+.ses-table td { padding: 10px 4px; border-top: 1px solid var(--line); color: var(--text-0); }
+.ses-table tr { cursor: pointer; }
+.ses-table tr.is-todo td { color: var(--text-3); }
+
+/* Reproductor de movilidad */
+.mob-clock { text-align: center; font-size: 56px; color: var(--text-0); line-height: 1.1; padding: 4px 0; }
+.mob-clock.is-running { color: var(--accent); }
+.mob-row { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 6px; }
+.mob-row:has(> :nth-child(2):last-child) { grid-template-columns: 1fr 3fr; }

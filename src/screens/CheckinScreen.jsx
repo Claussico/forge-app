@@ -1,265 +1,90 @@
-import { useState, useEffect } from 'react'
-import { fetchTodayCheckin, saveCheckin } from '../lib/queries'
-import { Icon } from '../components/UI'
+// Check-in diario. Lo que no se toca se envía como null (corrección del brief §4).
+// Tibia siempre visible (spec §2) en dos filas de botones (fase 2, cambio 5).
+import { useState } from 'react'
+import { queueCheckin, fetchTodayCheckin } from '../lib/api'
+import { useData } from '../lib/hooks'
+import { fmtDay, today } from '../lib/dates'
+import { Choice, NumField, go } from '../components/ui'
+import './forms.css'
 
-const PAIN_ZONES = [
-  'hombro_izq', 'hombro_der', 'codo_izq', 'codo_der',
-  'lumbar', 'rodilla_izq', 'rodilla_der',
-  'tibia_izq', 'tibia_der'
-]
+const TEN = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+const level = v => v == null ? 'none' : v >= 5 ? 'err' : v >= 3 ? 'warn' : 'none'
 
-const ZONE_LABELS = {
-  hombro_izq: 'Hombro izq', hombro_der: 'Hombro der',
-  codo_izq: 'Codo izq', codo_der: 'Codo der',
-  lumbar: 'Lumbar',
-  rodilla_izq: 'Rodilla izq', rodilla_der: 'Rodilla der',
-  tibia_izq: 'Tibia izq', tibia_der: 'Tibia der'
-}
-
-export default function CheckinScreen({ onDone }) {
-  const [weight, setWeight] = useState('')
-  const [sleepHours, setSleepHours] = useState('')
-  const [sleepQuality, setSleepQuality] = useState(7)
-  const [energy, setEnergy] = useState(7)
-  const [stress, setStress] = useState(4)
-  const [hunger, setHunger] = useState(5)
-  const [painAreas, setPainAreas] = useState({})
-  const [steps, setSteps] = useState('')
-  const [notes, setNotes] = useState('')
-  const [expanded, setExpanded] = useState(false)
+export default function CheckinScreen() {
+  const { data: prev } = useData('checkin:' + today(), fetchTodayCheckin)
+  const [f, setF] = useState({ weight_kg: null, sleep_hours: null, tibia_score: null, energy: null, sleep_quality: null, stress: null, hunger: null, steps: null, notes: null })
+  const [more, setMore] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [existing, setExisting] = useState(null)
-  const [error, setError] = useState('')
+  const [err, setErr] = useState('')
+  const set = k => v => setF(p => ({ ...p, [k]: v }))
+  const touched = Object.values(f).some(v => v != null && v !== '')
 
-  useEffect(() => {
-    fetchTodayCheckin().then(data => {
-      if (data) {
-        setExisting(data)
-        setWeight(data.weight_kg || '')
-        setSleepHours(data.sleep_hours || '')
-        setSleepQuality(data.sleep_quality || 7)
-        setEnergy(data.energy || 7)
-        setStress(data.stress || 4)
-        setHunger(data.hunger || 5)
-        setPainAreas(data.pain_areas || {})
-        setSteps(data.steps || '')
-        setNotes(data.notes || '')
-      }
-    })
-  }, [])
-
-  const save = async () => {
-    setSaving(true)
-    setError('')
+  async function save() {
+    setSaving(true); setErr('')
     try {
-      await saveCheckin({
-        weight_kg: weight ? Number(weight) : null,
-        sleep_hours: sleepHours ? Number(sleepHours) : null,
-        sleep_quality: Number(sleepQuality),
-        energy: Number(energy),
-        stress: Number(stress),
-        hunger: Number(hunger),
-        pain_areas: Object.keys(painAreas).length > 0 ? painAreas : null,
-        steps: steps ? Number(steps) : null,
-        notes: notes || null
-      })
-      onDone()
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setSaving(false)
-    }
+      await queueCheckin(f)
+      go('/hoy')
+    } catch (e) { setErr('No se pudo guardar en el dispositivo: ' + e.message); setSaving(false) }
   }
 
-  const today = new Date()
-  const dateStr = today.toLocaleDateString('es-ES', { weekday: 'short', day: '2-digit', month: 'short' })
-    .replace('.', '').replace(/\b\w/g, l => l.toUpperCase())
-
   return (
-    <div className="screen">
-      <div className="screen-body safe-top" style={{ padding: '24px 20px 120px' }}>
-        <div style={{ fontFamily: 'var(--ff-mono)', fontSize: 10.5, letterSpacing: '0.1em', color: 'var(--text-3)', textTransform: 'uppercase', marginBottom: 6 }}>
-          Check-in {existing ? '(editando)' : 'diario'}
-        </div>
-        <h1 className="h1" style={{ marginBottom: 18, fontWeight: 600 }}>{dateStr}</h1>
-
-        {/* Modo rápido */}
-        <div style={{ fontFamily: 'var(--ff-mono)', fontSize: 10, color: 'var(--text-4)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 10 }}>
-          Rápido · 15s
+    <>
+      <div className="body">
+        <div className="head">
+          <h1 className="h1">Check-in</h1>
+          <div className="ctx">{fmtDay(today())} · lo que no toques se guarda vacío{prev ? ' · ya hay uno hoy; este se añade' : ''}</div>
         </div>
 
-        <div className="card" style={{ padding: 16, marginBottom: 14 }}>
-          <NumberField label="Peso" value={weight} onChange={setWeight} unit="kg" step="0.1" />
-          <div style={{ height: 1, background: 'var(--border-1)', margin: '14px 0' }} />
-          <NumberField label="Sueño" value={sleepHours} onChange={setSleepHours} unit="h" step="0.5" />
-          <div style={{ height: 1, background: 'var(--border-1)', margin: '14px 0' }} />
-          <Slider label="Energía" value={energy} onChange={setEnergy} leftLabel="Agotado" rightLabel="Punta" />
+        <div className="two">
+          <label className="field"><span className="lbl">Peso</span><NumField id="c-w" decimals unit="kg" value={f.weight_kg} onChange={set('weight_kg')} label="Peso en kg" /></label>
+          <label className="field"><span className="lbl">Sueño</span><NumField id="c-s" decimals unit="h" value={f.sleep_hours} onChange={set('sleep_hours')} label="Horas de sueño" /></label>
         </div>
 
-        {/* Más contexto */}
-        {!expanded ? (
-          <button
-            onClick={() => setExpanded(true)}
-            className="btn btn--block"
-            style={{
-              borderStyle: 'dashed',
-              background: 'transparent',
-              color: 'var(--text-3)'
-            }}
-          >
-            + Añadir más contexto
-          </button>
-        ) : (
-          <div className="card" style={{ padding: 16, marginTop: 14 }}>
-            <Slider label="Calidad sueño" value={sleepQuality} onChange={setSleepQuality} leftLabel="Malo" rightLabel="Excelente" />
-            <div style={{ height: 1, background: 'var(--border-1)', margin: '14px 0' }} />
-            <Slider label="Estrés" value={stress} onChange={setStress} leftLabel="Calma" rightLabel="Alto" />
-            <div style={{ height: 1, background: 'var(--border-1)', margin: '14px 0' }} />
-            <Slider label="Hambre" value={hunger} onChange={setHunger} leftLabel="Saciado" rightLabel="Alto" />
+        <Tibia value={f.tibia_score} onChange={set('tibia_score')} />
 
-            <div style={{ height: 1, background: 'var(--border-1)', margin: '14px 0' }} />
-            <div>
-              <label className="label" style={{ marginBottom: 10 }}>Dolor por zona</label>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-                {PAIN_ZONES.map(z => (
-                  <PainZone
-                    key={z}
-                    label={ZONE_LABELS[z]}
-                    value={painAreas[z] || 0}
-                    onChange={(v) => {
-                      const copy = { ...painAreas }
-                      if (v === 0) delete copy[z]
-                      else copy[z] = v
-                      setPainAreas(copy)
-                    }}
-                  />
-                ))}
-              </div>
-            </div>
+        <div className="field"><span className="lbl">Energía <span className="hint">1–10</span></span>
+          <Choice className="chips chips--5" mono clearable label="Energía" options={TEN} value={f.energy} onChange={set('energy')} />
+        </div>
 
-            <div style={{ height: 1, background: 'var(--border-1)', margin: '14px 0' }} />
-            <NumberField label="Pasos" value={steps} onChange={setSteps} unit="" step="100" />
-
-            <div style={{ height: 1, background: 'var(--border-1)', margin: '14px 0' }} />
-            <label className="label">Notas</label>
-            <textarea
-              className="field"
-              style={{ minHeight: 80, fontFamily: 'var(--ff-sans)', resize: 'vertical' }}
-              placeholder="Algo relevante del día"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-            />
+        <button className="btn btn--block btn--ghost" aria-expanded={more} onClick={() => setMore(!more)}>
+          {more ? 'Menos campos' : 'Más campos · calidad de sueño, estrés, hambre, pasos, notas'}
+        </button>
+        {more && (
+          <div className="stack">
+            <div className="field"><span className="lbl">Calidad de sueño <span className="hint">1–10</span></span>
+              <Choice className="chips chips--5" mono clearable label="Calidad de sueño" options={TEN} value={f.sleep_quality} onChange={set('sleep_quality')} /></div>
+            <div className="field"><span className="lbl">Estrés <span className="hint">1–10</span></span>
+              <Choice className="chips chips--5" mono clearable label="Estrés" options={TEN} value={f.stress} onChange={set('stress')} /></div>
+            <div className="field"><span className="lbl">Hambre <span className="hint">1–10</span></span>
+              <Choice className="chips chips--5" mono clearable label="Hambre" options={TEN} value={f.hunger} onChange={set('hunger')} /></div>
+            <label className="field"><span className="lbl">Pasos</span><NumField id="c-steps" value={f.steps} onChange={set('steps')} label="Pasos" /></label>
+            <label className="field"><span className="lbl">Notas</span>
+              <textarea className="text-in" value={f.notes ?? ''} onChange={e => set('notes')(e.target.value || null)} placeholder="Opcional" /></label>
           </div>
         )}
-
-        {error && <div style={{ color: 'var(--err)', fontSize: 12, marginTop: 12 }}>{error}</div>}
+        {err && <p className="err-text" role="alert">{err}</p>}
       </div>
-
-      <div style={{
-        position: 'sticky', bottom: 0, left: 0, right: 0,
-        padding: '12px 20px',
-        background: 'linear-gradient(to top, var(--bg-0) 70%, transparent)',
-        paddingBottom: 'calc(12px + env(safe-area-inset-bottom))'
-      }}>
-        <button
-          className="btn btn--primary btn--block btn--lg"
-          disabled={saving || (!weight && !sleepHours)}
-          onClick={save}
-        >
-          {saving ? 'Guardando…' : existing ? 'Actualizar check-in' : 'Guardar check-in'}
-        </button>
+      <div className="foot">
+        <button className="btn btn--primary btn--block" disabled={!touched || saving} onClick={save}>{saving ? 'Guardando…' : 'Guardar check-in'}</button>
       </div>
-    </div>
+    </>
   )
 }
 
-function NumberField({ label, value, onChange, unit, step = 1 }) {
+export function Tibia({ value, onChange }) {
+  const lv = level(value)
+  const row = arr => arr.map(v => (
+    <button key={v} className="num" aria-pressed={value === v} onClick={() => onChange(value === v ? null : v)}>{v}</button>
+  ))
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-      <label style={{ fontSize: 14, color: 'var(--text-1)', fontWeight: 500 }}>{label}</label>
-      <div style={{
-        display: 'flex', alignItems: 'baseline', gap: 6,
-        background: 'var(--bg-2)',
-        border: '1px solid var(--border-0)',
-        borderRadius: 'var(--r-md)',
-        padding: '6px 10px',
-        minWidth: 130
-      }}>
-        <input
-          type="number"
-          inputMode="decimal"
-          step={step}
-          className="num-input"
-          style={{ width: 100, textAlign: 'right', fontSize: 22, padding: 0 }}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder="—"
-        />
-        {unit && <span style={{ color: 'var(--text-3)', fontFamily: 'var(--ff-mono)', fontSize: 12 }}>{unit}</span>}
+    <div className="tibia" data-level={lv} role="group" aria-label="Tibia de 0 a 10">
+      <div className="tibia-head">
+        <div><div className="t0">Tibia</div><div className="t2">Molestia en la cara interna de la tibia (0 = nada, 10 = máxima)</div></div>
+        <span className="tibia-val num">{value ?? '—'}</span>
       </div>
-    </div>
-  )
-}
-
-function Slider({ label, value, onChange, leftLabel, rightLabel }) {
-  return (
-    <div>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
-        <label style={{ fontSize: 14, color: 'var(--text-1)', fontWeight: 500 }}>{label}</label>
-        <span style={{ fontFamily: 'var(--ff-mono)', fontSize: 22, color: 'var(--text-0)', fontWeight: 500 }}>
-          {value}
-          <span style={{ fontSize: 11, color: 'var(--text-3)' }}> /10</span>
-        </span>
-      </div>
-      <input
-        type="range"
-        min={1}
-        max={10}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        style={{
-          width: '100%',
-          accentColor: 'var(--accent)',
-          height: 4
-        }}
-      />
-      <div style={{
-        display: 'flex', justifyContent: 'space-between', marginTop: 6,
-        fontFamily: 'var(--ff-mono)', fontSize: 9, letterSpacing: '0.1em',
-        textTransform: 'uppercase', color: 'var(--text-4)'
-      }}>
-        <span>{leftLabel}</span>
-        <span>{rightLabel}</span>
-      </div>
-    </div>
-  )
-}
-
-function PainZone({ label, value, onChange }) {
-  return (
-    <div style={{
-      padding: '10px 12px',
-      background: value > 0 ? 'var(--accent-bg)' : 'var(--bg-2)',
-      border: `1px solid ${value > 0 ? 'var(--accent-border)' : 'var(--border-0)'}`,
-      borderRadius: 'var(--r-md)'
-    }}>
-      <div style={{ fontSize: 11, color: 'var(--text-2)', marginBottom: 4 }}>{label}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <input
-          type="range"
-          min={0}
-          max={10}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          style={{ flex: 1, accentColor: 'var(--accent)', height: 2 }}
-        />
-        <span style={{
-          fontFamily: 'var(--ff-mono)', fontSize: 13, minWidth: 18,
-          textAlign: 'right', color: value > 0 ? 'var(--accent-hi)' : 'var(--text-3)'
-        }}>
-          {value}
-        </span>
-      </div>
+      <div className="tibia-scale">{row([0, 1, 2, 3, 4, 5])}</div>
+      <div className="tibia-scale">{row([6, 7, 8, 9, 10])}</div>
+      <div className="tibia-legend"><span>0–2 normal</span><span>3–4 aviso</span><span>5 o más alerta</span></div>
     </div>
   )
 }

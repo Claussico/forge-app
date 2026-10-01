@@ -1,0 +1,74 @@
+{
+  "title": "Sesión en curso: elige la estructura",
+  "question": "Tres estructuras para la pantalla de sesión, todas en la identidad actual de FORGE (fondo casi negro, verde industrial, cifras tabulares). En las tres: carga y reps precargadas, RPE siempre pulsado (6–10 en pasos de 0,5) y pulsar el RPE confirma la serie, temporizador arriba que arranca solo, pantalla encendida, cola sin conexión y 'Finalizar' con deshacer de 10 s. Elige cuál desarrollo en maqueta.",
+  "options": [
+    {
+      "id": "planilla",
+      "label": "La planilla",
+      "kicker": "THE ROLL",
+      "lineage": "La hoja de registro en papel del gimnasio: toda la sesión en una rejilla",
+      "thesis": "Toda la sesión en una rejilla densa; la fila activa se ilumina y la consola de abajo la edita.",
+      "palette": ["#0a0b0d", "#c8ccd2", "#6b8e6e", "#c4a86e"],
+      "materials": ["rejilla tabular", "fila activa resaltada", "consola fija abajo"],
+      "viewport": "Arriba, el temporizador y el progreso. En el centro, todos los ejercicios como bloques de filas compactas (serie · kg · reps · RPE) con la fila activa resaltada. Abajo, la consola: kg ±, reps ± y los chips de RPE.",
+      "risk": "Es la más densa: con muchos ejercicios hay que hacer scroll y la fila activa puede quedar fuera de vista si no se ancla.",
+      "wireframe": {"cols": 6, "rows": 12, "regions": [
+        {"label": "temporizador · 2:14 · 4/14 series", "x": 0, "y": 0, "w": 6, "h": 1, "accent": true},
+        {"label": "Hack squat · 3 filas", "x": 0, "y": 1, "w": 6, "h": 2},
+        {"label": "fila activa: RDL serie 2", "x": 0, "y": 3, "w": 6, "h": 1, "accent": true},
+        {"label": "RDL · resto de filas", "x": 0, "y": 4, "w": 6, "h": 1},
+        {"label": "Gemelo · 3 filas", "x": 0, "y": 5, "w": 6, "h": 2},
+        {"label": "kg − 26 +", "x": 0, "y": 8, "w": 3, "h": 1},
+        {"label": "reps − 8 +", "x": 3, "y": 8, "w": 3, "h": 1},
+        {"label": "RPE 6 · 6,5 · 7 · 7,5 · 8", "x": 0, "y": 9, "w": 6, "h": 1, "accent": true},
+        {"label": "RPE 8,5 · 9 · 9,5 · 10", "x": 0, "y": 10, "w": 6, "h": 1, "accent": true},
+        {"label": "sync · Finalizar", "x": 0, "y": 11, "w": 6, "h": 1}
+      ]}
+    },
+    {
+      "id": "consola",
+      "label": "La consola de pulgar",
+      "lineage": "Mando de una mano: la mitad de abajo no cambia nunca y la de arriba sí",
+      "thesis": "La mitad inferior es una consola fija que siempre está en el mismo sitio; arriba cambia el contexto: ejercicio, serie, notas y descanso.",
+      "palette": ["#0a0b0d", "#c8ccd2", "#6b8e6e", "#c4a86e"],
+      "materials": ["consola fija", "serie actual grande", "memoria muscular"],
+      "viewport": "Arriba, el ejercicio, 'Serie 2 de 3', el objetivo y la última vez, con las notas técnicas plegadas. Abajo, siempre igual: kg ± y reps ± grandes y la rejilla de RPE de 9 botones; pulsar el RPE registra la serie.",
+      "risk": "Se ve una sola serie a la vez: el resto de la sesión queda detrás de un toque ('ver tabla').",
+      "wireframe": {"cols": 6, "rows": 12, "regions": [
+        {"label": "temporizador · 4/14", "x": 0, "y": 0, "w": 6, "h": 1, "accent": true},
+        {"label": "RDL con mancuernas · Serie 2/3", "x": 0, "y": 1, "w": 6, "h": 2},
+        {"label": "objetivo 26 kg × 8 · RPE 7,5 · última: 26×8 @8", "x": 0, "y": 3, "w": 6, "h": 1},
+        {"label": "notas técnicas ▸ · ver tabla ▸", "x": 0, "y": 4, "w": 6, "h": 1},
+        {"label": "kg por mano  − 26 +", "x": 0, "y": 6, "w": 6, "h": 1},
+        {"label": "reps  − 8 +", "x": 0, "y": 7, "w": 6, "h": 1},
+        {"label": "RPE 6 · 6,5 · 7", "x": 0, "y": 8, "w": 6, "h": 1, "accent": true},
+        {"label": "RPE 7,5 · 8 · 8,5", "x": 0, "y": 9, "w": 6, "h": 1, "accent": true},
+        {"label": "RPE 9 · 9,5 · 10", "x": 0, "y": 10, "w": 6, "h": 1, "accent": true},
+        {"label": "sync · saltar serie · Finalizar", "x": 0, "y": 11, "w": 6, "h": 1}
+      ]}
+    },
+    {
+      "id": "carrusel",
+      "label": "El carrusel de ejercicios",
+      "lineage": "Una página por ejercicio; deslizar lateralmente pasa al siguiente, como pasar hojas",
+      "thesis": "Cada ejercicio es una página con sus series en grande; se desliza de lado entre ejercicios y se avanza solo al completar uno.",
+      "palette": ["#0a0b0d", "#c8ccd2", "#6b8e6e", "#c4a86e"],
+      "materials": ["páginas por ejercicio", "puntos de paginación", "series en tarjetas grandes"],
+      "viewport": "Arriba, el temporizador y los puntos de paginación (un punto por ejercicio, con su estado). En el centro, el ejercicio actual con sus 3 series en filas altas y la serie en curso abierta, con steppers y RPE dentro de la fila.",
+      "risk": "Los controles viven dentro de la fila activa, así que su altura cambia con el número de series y el pulgar no tiene un sitio fijo.",
+      "wireframe": {"cols": 6, "rows": 12, "regions": [
+        {"label": "temporizador · ● ● ○ ○", "x": 0, "y": 0, "w": 6, "h": 1, "accent": true},
+        {"label": "RDL con mancuernas · notas ▸", "x": 0, "y": 1, "w": 6, "h": 1},
+        {"label": "Serie 1 · 26 × 8 @7 ✓", "x": 0, "y": 2, "w": 6, "h": 1},
+        {"label": "Serie 2 (abierta)", "x": 0, "y": 3, "w": 6, "h": 1, "accent": true},
+        {"label": "kg − 26 +   reps − 8 +", "x": 0, "y": 4, "w": 6, "h": 1, "accent": true},
+        {"label": "RPE 6 … 10", "x": 0, "y": 5, "w": 6, "h": 2, "accent": true},
+        {"label": "Serie 3 · 26 × 8", "x": 0, "y": 7, "w": 6, "h": 1},
+        {"label": "◂ Hack squat     Gemelo ▸", "x": 0, "y": 9, "w": 6, "h": 1},
+        {"label": "sync · Finalizar", "x": 0, "y": 11, "w": 6, "h": 1}
+      ]}
+    }
+  ],
+  "reroll": true,
+  "steer": true
+}

@@ -1,0 +1,669 @@
+<title>FORGE · maquetas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: un teléfono de 390 px con la pantalla elegida; fuera del teléfono, solo el selector de pantallas.
+   Identidad FORGE existente (Plex, verde industrial, casi negro) con grises recalibrados a AA.
+   Mono solo para cifras; sans para todo lo demás. Texto mínimo 12 px. Zonas táctiles ≥ 48 px. */
+:root {
+  color-scheme: dark;
+  --bg-0: #0a0b0d;   /* fondo */
+  --bg-1: #131519;   /* superficie */
+  --bg-2: #1b1e23;   /* control */
+  --bg-3: #24282e;   /* control pulsado */
+  --line: #2a2e35;
+  --text-0: #f3f4f5;
+  --text-1: #cdd1d6;
+  --text-2: #a3a9b0;  /* ≥ 7:1 sobre bg-0 */
+  --text-3: #858c94;  /* ≥ 4.6:1 sobre bg-2: mínimo para texto */
+  --accent: #86a989;  /* acción principal */
+  --accent-ink: #0b130c;
+  --accent-soft: rgba(134,169,137,.14);
+  --done: #b9c4cf;    /* estado hecho: neutro claro, no verde */
+  --warn: #d6b46f;
+  --warn-soft: rgba(214,180,111,.14);
+  --err: #e08a80;
+  --err-soft: rgba(224,138,128,.14);
+  --desk: #050607;    /* fondo fuera del teléfono */
+  --ff-sans: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  --ff-mono: 'IBM Plex Mono', ui-monospace, 'SFMono-Regular', monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: light) { :root:not([data-theme="dark"]):not([data-forge="dark"]) {
+  color-scheme: light;
+  --bg-0: #f3f4f2; --bg-1: #ffffff; --bg-2: #eceeeb; --bg-3: #e1e4e0; --line: #d6dad5;
+  --text-0: #101214; --text-1: #2b2f33; --text-2: #4b5157; --text-3: #5f666d;
+  --accent: #3f6b45; --accent-ink: #ffffff; --accent-soft: rgba(63,107,69,.12);
+  --done: #46525e; --warn: #8a6414; --warn-soft: rgba(138,100,20,.12); --err: #a83a2f; --err-soft: rgba(168,58,47,.1);
+  --desk: #dfe2de;
+} }
+:root[data-theme="light"], :root[data-forge="light"] {
+  color-scheme: light;
+  --bg-0: #f3f4f2; --bg-1: #ffffff; --bg-2: #eceeeb; --bg-3: #e1e4e0; --line: #d6dad5;
+  --text-0: #101214; --text-1: #2b2f33; --text-2: #4b5157; --text-3: #5f666d;
+  --accent: #3f6b45; --accent-ink: #ffffff; --accent-soft: rgba(63,107,69,.12);
+  --done: #46525e; --warn: #8a6414; --warn-soft: rgba(138,100,20,.12); --err: #a83a2f; --err-soft: rgba(168,58,47,.1);
+  --desk: #dfe2de;
+}
+:root[data-forge="dark"] {
+  color-scheme: dark;
+  --bg-0: #0a0b0d; --bg-1: #131519; --bg-2: #1b1e23; --bg-3: #24282e; --line: #2a2e35;
+  --text-0: #f3f4f5; --text-1: #cdd1d6; --text-2: #a3a9b0; --text-3: #858c94;
+  --accent: #86a989; --accent-ink: #0b130c; --accent-soft: rgba(134,169,137,.14);
+  --done: #b9c4cf; --warn: #d6b46f; --warn-soft: rgba(214,180,111,.14); --err: #e08a80; --err-soft: rgba(224,138,128,.14);
+  --desk: #050607;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--desk); color: var(--text-1); font-family: var(--ff-sans); font-size: 15px; line-height: 1.45; padding-inline: 16px; padding-block: 16px 32px; }
+.num { font-family: var(--ff-mono); font-variant-numeric: tabular-nums; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+::selection { background: var(--accent-soft); }
+
+/* Selector de pantallas (fuera del teléfono) */
+.picker { max-width: 860px; margin: 0 auto 16px; display: flex; flex-direction: column; gap: 10px; }
+.picker h1 { margin: 0; font-size: 18px; color: var(--text-0); font-weight: 600; text-wrap: balance; }
+.picker p { margin: 0; color: var(--text-2); font-size: 13px; max-width: 70ch; }
+.tabs-pick { display: flex; flex-wrap: wrap; gap: 6px; }
+.tabs-pick button { min-height: 40px; padding: 0 12px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg-1); color: var(--text-1); font-size: 13px; }
+.tabs-pick button[aria-pressed="true"] { background: var(--text-0); color: var(--bg-0); border-color: var(--text-0); }
+.theme-pick { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--text-2); }
+.theme-pick button { min-height: 32px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-1); }
+.theme-pick button[aria-pressed="true"] { border-color: var(--accent); color: var(--text-0); }
+
+/* Teléfono */
+.phone { width: 100%; max-width: 390px; height: 844px; max-height: calc(100vh - 40px); min-height: 640px; margin: 0 auto; background: var(--bg-0); border-radius: 36px; border: 1px solid var(--line); overflow: hidden; display: flex; flex-direction: column; position: relative; }
+@media (max-width: 430px) { .phone { border-radius: 0; border: 0; max-height: none; height: auto; min-height: 780px; margin-inline: -16px; width: calc(100% + 32px); max-width: none; } }
+.screen { flex: 1; overflow-y: auto; display: flex; flex-direction: column; min-height: 0; }
+.screen[hidden] { display: none !important; }
+.body { padding: 14px 16px 24px; display: flex; flex-direction: column; gap: 16px; flex: 1; }
+.statusbar { height: 44px; flex-shrink: 0; }
+
+/* Cabecera de pantalla */
+.head { display: flex; flex-direction: column; gap: 4px; }
+.date-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 48px; padding: 0 12px 0 0; background: none; border: 0; color: var(--text-0); font-size: 24px; font-weight: 600; letter-spacing: -0.01em; }
+.date-btn svg { color: var(--text-2); }
+.date-btn input[type=date] { position: absolute; opacity: 0; pointer-events: none; width: 1px; height: 1px; }
+.ctx { color: var(--text-2); font-size: 14px; }
+.ctx b { color: var(--text-1); font-weight: 500; }
+h2.sec { margin: 0; font-size: 13px; font-weight: 600; color: var(--text-2); letter-spacing: .04em; text-transform: uppercase; }
+
+/* Bloques */
+.panel { background: var(--bg-1); border: 1px solid var(--line); border-radius: var(--r); }
+.row { display: flex; align-items: center; gap: 12px; min-height: 56px; padding: 8px 14px; }
+.row + .row { border-top: 1px solid var(--line); }
+.grow { flex: 1; min-width: 0; }
+.t0 { color: var(--text-0); font-weight: 500; }
+.t2 { color: var(--text-2); font-size: 13px; }
+
+.btn { min-height: 48px; padding: 0 16px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg-2); color: var(--text-0); font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.btn--primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+.btn--block { width: 100%; }
+.btn--sm { min-height: 40px; padding: 0 12px; font-size: 14px; }
+.btn--ghost { background: transparent; }
+
+/* Sesión del día */
+.today { padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.today h3 { margin: 0; font-size: 20px; color: var(--text-0); font-weight: 600; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--text-1); font-size: 14px; }
+.facts .num { color: var(--text-0); }
+.note { font-size: 14px; color: var(--text-2); }
+.cap { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 12px; border-radius: 8px; background: var(--bg-2); font-size: 14px; }
+.cap .num { color: var(--text-0); font-size: 17px; }
+
+/* Avisos */
+.alert { display: flex; gap: 12px; align-items: center; padding: 10px 14px; border-radius: var(--r); background: var(--warn-soft); border: 1px solid color-mix(in srgb, var(--warn) 35%, transparent); }
+.alert .grow { font-size: 14px; color: var(--text-0); }
+.alert .t2 { color: var(--text-1); }
+
+/* Estado de sesión */
+.st { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; white-space: nowrap; }
+.st i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; border: 2px solid currentColor; }
+.st--done { color: var(--done); } .st--done i { background: currentColor; }
+.st--planned { color: var(--text-2); }
+.st--skipped { color: var(--text-3); } .st--skipped i { border-style: dashed; }
+.st--moved { color: var(--warn); } .st--moved i { border-radius: 2px; }
+.st--late { color: var(--warn); }
+
+/* Tira de 7 días (variante B) */
+.strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.day { min-height: 64px; border-radius: 8px; border: 1px solid transparent; background: var(--bg-1); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 6px 0; }
+.day .dw { font-size: 12px; color: var(--text-2); }
+.day .dn { font-family: var(--ff-mono); font-size: 16px; color: var(--text-0); }
+.day .dot { width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--text-3); }
+.day.done .dot { background: var(--done); border-color: var(--done); }
+.day.late .dot { border-color: var(--warn); }
+.day.moved .dot { border-color: var(--warn); border-radius: 2px; }
+.day.skipped .dot { border-style: dashed; }
+.day.none .dot { border-color: transparent; }
+.day[aria-current="date"] { border-color: var(--text-0); }
+
+/* Volumen */
+.vol { display: grid; grid-template-columns: 112px 1fr 64px; align-items: center; gap: 6px 10px; padding: 12px 14px; font-size: 13px; }
+.vol .bar { height: 8px; border-radius: 4px; background: var(--bg-3); position: relative; overflow: hidden; }
+.vol .bar span { position: absolute; inset: 0 auto 0 0; background: var(--text-2); border-radius: 4px; }
+.vol .v { text-align: right; color: var(--text-1); }
+.vol .m { color: var(--text-1); }
+
+/* Formularios */
+.field { display: flex; flex-direction: column; gap: 8px; }
+.field > label, .field > .lbl { font-size: 14px; color: var(--text-1); font-weight: 500; display: flex; justify-content: space-between; gap: 8px; }
+.field .hint { font-size: 13px; color: var(--text-2); font-weight: 400; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { min-height: 48px; min-width: 48px; padding: 0 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-2); color: var(--text-1); font-size: 15px; }
+.chip.num { font-size: 16px; padding: 0 10px; }
+.chip[aria-pressed="true"] { background: var(--text-0); color: var(--bg-0); border-color: var(--text-0); font-weight: 600; }
+.grid-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(52px, 1fr)); gap: 6px; }
+.numin { display: flex; align-items: stretch; border: 1px solid var(--line); border-radius: var(--r); background: var(--bg-2); overflow: hidden; }
+.numin button { width: 56px; min-height: 52px; background: transparent; border: 0; color: var(--text-0); font-size: 22px; }
+.numin input { flex: 1; min-width: 0; text-align: center; background: transparent; border: 0; font-family: var(--ff-mono); font-size: 22px; color: var(--text-0); font-variant-numeric: tabular-nums; }
+.numin .unit { align-self: center; color: var(--text-2); font-size: 13px; padding-right: 4px; }
+.text-in { min-height: 52px; padding: 10px 12px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg-2); color: var(--text-0); width: 100%; }
+select.text-in { appearance: none; }
+textarea.text-in { min-height: 80px; resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.two > * { min-width: 0; }
+.numin input { width: 100%; }
+.ten { grid-template-columns: repeat(5, 1fr); }
+.stack { display: flex; flex-direction: column; gap: 16px; }
+.empty { color: var(--text-3); }
+
+/* Tibia */
+.tibia { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-radius: var(--r); border: 1px solid var(--line); background: var(--bg-1); }
+.tibia .val { font-family: var(--ff-mono); font-size: 28px; color: var(--text-0); }
+.tibia[data-level="warn"] { border-color: color-mix(in srgb, var(--warn) 60%, transparent); background: var(--warn-soft); }
+.tibia[data-level="warn"] .val { color: var(--warn); }
+.tibia[data-level="err"] { border-color: color-mix(in srgb, var(--err) 60%, transparent); background: var(--err-soft); }
+.tibia[data-level="err"] .val { color: var(--err); }
+.scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; }
+.scale button { min-height: 48px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-2); font-family: var(--ff-mono); font-size: 14px; padding: 0; color: var(--text-1); }
+.scale button[aria-pressed="true"] { background: var(--text-0); color: var(--bg-0); border-color: var(--text-0); font-weight: 600; }
+.tibia[data-level="warn"] .scale button[aria-pressed="true"] { background: var(--warn); border-color: var(--warn); color: var(--bg-0); }
+.tibia[data-level="err"] .scale button[aria-pressed="true"] { background: var(--err); border-color: var(--err); color: var(--bg-0); }
+.scale-legend { display: flex; justify-content: space-between; font-size: 12px; color: var(--text-2); }
+
+/* Pie fijo y barra de navegación */
+.foot { position: sticky; bottom: 0; padding: 12px 16px; background: var(--bg-0); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.nav { display: grid; border-top: 1px solid var(--line); background: var(--bg-1); padding-bottom: 18px; flex-shrink: 0; }
+.nav.n4 { grid-template-columns: repeat(4, 1fr); } .nav.n3 { grid-template-columns: repeat(3, 1fr); }
+.nav button { min-height: 56px; background: none; border: 0; color: var(--text-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; }
+.nav button[aria-current="page"] { color: var(--text-0); font-weight: 600; }
+.nav button[aria-current="page"] svg { color: var(--accent); }
+.sync { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text-2); }
+.sync i { width: 8px; height: 8px; border-radius: 50%; background: var(--done); display: inline-block; }
+
+.toast { position: absolute; left: 12px; right: 12px; bottom: 96px; padding: 12px 14px; border-radius: var(--r); background: var(--text-0); color: var(--bg-0); display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.toast button { min-height: 40px; padding: 0 12px; border-radius: 8px; background: transparent; border: 1px solid currentColor; color: inherit; font-weight: 600; }
+.toast .bar { position: absolute; left: 0; bottom: 0; height: 3px; background: var(--accent); width: 100%; transform-origin: left; animation: drain 10s linear forwards; border-radius: 0 0 var(--r) var(--r); }
+@keyframes drain { to { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .toast .bar { animation: none; } }
+
+
+/* Sesión en curso: consola de pulgar */
+.ses-top { display: flex; align-items: center; gap: 8px; padding: 6px 12px 8px; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+.ses-top .exit { min-height: 44px; min-width: 44px; background: none; border: 0; color: var(--text-1); font-size: 14px; padding: 0 6px; }
+.timer { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.timer .tv { font-family: var(--ff-mono); font-size: 26px; color: var(--text-0); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.timer .tl { font-size: 12px; color: var(--text-2); }
+.timer.done .tv { color: var(--accent); }
+.prog { font-size: 13px; color: var(--text-2); min-width: 44px; text-align: right; }
+.ctxt { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; overflow-y: auto; }
+.ex-name { margin: 0; font-size: 22px; color: var(--text-0); font-weight: 600; text-wrap: balance; }
+.set-of { font-size: 15px; color: var(--text-1); }
+.set-of .num { color: var(--text-0); }
+.ref { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 14px; color: var(--text-2); }
+.ref .num { color: var(--text-1); }
+.links { display: flex; gap: 8px; flex-wrap: wrap; }
+.links button { min-height: 44px; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--text-1); font-size: 14px; }
+.notes-box { font-size: 14px; color: var(--text-1); background: var(--bg-1); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.done-sets { display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.done-sets div { display: flex; gap: 10px; color: var(--text-2); }
+.done-sets .num { color: var(--text-1); }
+.console { flex-shrink: 0; border-top: 1px solid var(--line); background: var(--bg-1); padding: 10px 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+.stepper { display: grid; grid-template-columns: 96px 56px 1fr 56px; align-items: center; gap: 6px; }
+.stepper .sl { font-size: 13px; color: var(--text-2); }
+.stepper button { min-height: 52px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-2); font-size: 24px; color: var(--text-0); }
+.stepper .sv { text-align: center; font-family: var(--ff-mono); font-size: 28px; color: var(--text-0); font-variant-numeric: tabular-nums; }
+.stepper[hidden] { display: none !important; }
+.rpe-lbl { display: flex; justify-content: space-between; font-size: 13px; color: var(--text-2); }
+.rpe-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.rpe-grid button { min-height: 56px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg-2); font-family: var(--ff-mono); font-size: 20px; color: var(--text-0); }
+.rpe-grid button:active { background: var(--accent); color: var(--accent-ink); }
+.ses-actions { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+#sesion .toast { top: 96px; bottom: auto; }
+.sheet[hidden], .toast[hidden], .notes-box[hidden], .stack[hidden] { display: none !important; }
+.sheet { position: absolute; inset: 88px 0 0; background: var(--bg-0); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; }
+.sheet table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.sheet th { text-align: left; font-weight: 500; color: var(--text-2); font-size: 13px; padding: 6px 4px; }
+.sheet td { padding: 8px 4px; border-top: 1px solid var(--line); color: var(--text-1); }
+.sheet td.num { color: var(--text-0); }
+
+.mock-note { max-width: 860px; margin: 14px auto 0; color: var(--text-2); font-size: 13px; }
+.mock-note b { color: var(--text-1); }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-today" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-week" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="3.5" y="5" width="17" height="16" rx="2"/><path d="M8 3v4M16 3v4M3.5 10h17"/></g></symbol>
+  <symbol id="i-progress" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20h18"/><path d="M4 16l5-5 4 3 7-8"/></g></symbol>
+  <symbol id="i-log" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></g></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" d="M6 9l6 6 6-6"/></symbol>
+</svg>
+
+<div class="picker">
+  <h1>FORGE · maquetas de la fase 2</h1>
+  <p>Datos de prueba del Supabase local (miércoles 1 de octubre, bloque 1, semana 2). Las dos navegaciones conviven aquí: A tiene 4 pestañas (Hoy · Semana · Progreso · Registrar) y B tiene 3, con la semana dentro de Hoy. Los botones funcionan para ver los estados; nada se guarda.</p>
+  <div class="tabs-pick" role="group" aria-label="Pantalla">
+    <button data-show="hoyA" aria-pressed="true">Hoy · navegación A</button>
+    <button data-show="hoyB" aria-pressed="false">Hoy · navegación B</button>
+    <button data-show="semana" aria-pressed="false">Semana (A)</button>
+    <button data-show="actividad" aria-pressed="false">Registrar actividad</button>
+    <button data-show="checkin" aria-pressed="false">Check-in</button>
+    <button data-show="sesion" aria-pressed="false">Sesión en curso</button>
+  </div>
+  <div class="theme-pick" role="group" aria-label="Tema de la app">Tema de la app:
+    <button data-forge-theme="dark" aria-pressed="true">Oscuro</button>
+    <button data-forge-theme="light" aria-pressed="false">Claro</button>
+  </div>
+</div>
+
+<div class="phone" id="phone">
+  <div class="statusbar" aria-hidden="true"></div>
+
+  <!-- ============ HOY · A ============ -->
+  <section class="screen" id="hoyA" aria-label="Hoy, navegación A">
+    <div class="body">
+      <div class="head">
+        <label class="date-btn"><span>Miércoles 1 oct</span><svg width="18" height="18"><use href="#i-chev"/></svg><input type="date" value="2026-10-01" aria-label="Elegir fecha"></label>
+        <div class="ctx"><b>Bloque 1 · Acumulación</b> · semana <span class="num">2</span> de <span class="num">4</span> · día <span class="num">3</span></div>
+      </div>
+
+      <div class="alert" role="status">
+        <div class="grow">Torso A (martes) sin registrar<div class="t2">Lo programado de ayer sigue abierto.</div></div>
+        <button class="btn btn--sm" data-go="sesion">Registrar</button>
+      </div>
+
+      <div class="panel today">
+        <span class="st st--planned"><i></i>Planificada · hoy</span>
+        <h3>Carrera</h3>
+        <div class="facts"><span><span class="num">30</span> min</span><span>Z2</span><span>objetivo <span class="num">5</span> km</span></div>
+        <div class="note">Z2 conversacional. Superficie blanda (césped o tierra). Parar si la tibia pasa de 3/10.</div>
+        <div class="cap"><span>Tope de distancia hoy (+10 % sobre la salida más larga)</span><span class="num">5,06 km</span></div>
+        <button class="btn btn--primary btn--block">Registrar carrera</button>
+      </div>
+
+      <div class="panel">
+        <div class="row"><div class="grow"><div class="t0">Check-in de hoy</div><div class="t2">Pendiente · peso, sueño, tibia</div></div><button class="btn btn--sm" data-go="checkin">Hacer check-in</button></div>
+        <div class="row"><div class="grow"><div class="t0">Semana 2</div><div class="t2"><span class="num">1</span> de <span class="num">5</span> sesiones hechas · <span class="num">1</span> sin registrar</div></div><button class="btn btn--sm btn--ghost" data-go="semana">Ver</button></div>
+      </div>
+    </div>
+    <nav class="nav n4" aria-label="Principal">
+      <button aria-current="page"><svg width="22" height="22"><use href="#i-today"/></svg>Hoy</button>
+      <button data-go="semana"><svg width="22" height="22"><use href="#i-week"/></svg>Semana</button>
+      <button><svg width="22" height="22"><use href="#i-progress"/></svg>Progreso</button>
+      <button data-go="actividad"><svg width="22" height="22"><use href="#i-log"/></svg>Registrar</button>
+    </nav>
+  </section>
+
+  <!-- ============ HOY · B ============ -->
+  <section class="screen" id="hoyB" aria-label="Hoy, navegación B" hidden>
+    <div class="body">
+      <div class="head">
+        <label class="date-btn"><span>Miércoles 1 oct</span><svg width="18" height="18"><use href="#i-chev"/></svg><input type="date" value="2026-10-01" aria-label="Elegir fecha"></label>
+        <div class="ctx"><b>Bloque 1 · Acumulación</b> · semana <span class="num">2</span> de <span class="num">4</span></div>
+      </div>
+
+      <div class="strip" role="list" aria-label="Semana 2">
+        <button class="day done" role="listitem" aria-label="Lunes 29, hecha"><span class="dw">L</span><span class="dn">29</span><span class="dot"></span></button>
+        <button class="day late" role="listitem" aria-label="Martes 30, sin registrar"><span class="dw">M</span><span class="dn">30</span><span class="dot"></span></button>
+        <button class="day" role="listitem" aria-current="date" aria-label="Miércoles 1, hoy, planificada"><span class="dw">X</span><span class="dn">1</span><span class="dot"></span></button>
+        <button class="day" role="listitem" aria-label="Jueves 2, planificada"><span class="dw">J</span><span class="dn">2</span><span class="dot"></span></button>
+        <button class="day moved" role="listitem" aria-label="Viernes 3, movida"><span class="dw">V</span><span class="dn">3</span><span class="dot"></span></button>
+        <button class="day" role="listitem" aria-label="Sábado 4, planificada"><span class="dw">S</span><span class="dn">4</span><span class="dot"></span></button>
+        <button class="day skipped" role="listitem" aria-label="Domingo 5, omitida"><span class="dw">D</span><span class="dn">5</span><span class="dot"></span></button>
+      </div>
+
+      <div class="alert" role="status">
+        <div class="grow">Torso A (martes) sin registrar</div>
+        <button class="btn btn--sm">Registrar</button>
+      </div>
+
+      <div class="panel today">
+        <span class="st st--planned"><i></i>Planificada · hoy</span>
+        <h3>Carrera</h3>
+        <div class="facts"><span><span class="num">30</span> min</span><span>Z2</span><span>objetivo <span class="num">5</span> km</span></div>
+        <div class="cap"><span>Tope de distancia hoy</span><span class="num">5,06 km</span></div>
+        <button class="btn btn--primary btn--block">Registrar carrera</button>
+      </div>
+
+      <div class="panel">
+        <div class="row"><div class="grow"><div class="t0">Check-in de hoy</div><div class="t2">Pendiente</div></div><button class="btn btn--sm" data-go="checkin">Hacer check-in</button></div>
+        <div class="row"><div class="grow"><div class="t0">Volumen de la semana</div><div class="t2">Cuádriceps <span class="num">3/10</span> · Pecho <span class="num">0/10</span> · 9 más</div></div><button class="btn btn--sm btn--ghost">Ver</button></div>
+      </div>
+    </div>
+    <nav class="nav n3" aria-label="Principal">
+      <button aria-current="page"><svg width="22" height="22"><use href="#i-today"/></svg>Hoy</button>
+      <button><svg width="22" height="22"><use href="#i-progress"/></svg>Progreso</button>
+      <button data-go="actividad"><svg width="22" height="22"><use href="#i-log"/></svg>Registrar</button>
+    </nav>
+  </section>
+
+  <!-- ============ SEMANA (A) ============ -->
+  <section class="screen" id="semana" aria-label="Semana" hidden>
+    <div class="body">
+      <div class="head">
+        <div class="date-btn" style="padding:0">Semana 2</div>
+        <div class="ctx"><b>Bloque 1 · Acumulación</b> · <span class="num">29 sep – 5 oct</span></div>
+      </div>
+
+      <div class="panel" role="list">
+        <div class="row" role="listitem"><div class="num t2" style="width:44px">L 29</div><div class="grow"><div class="t0">Lower A - Fuerza</div></div><span class="st st--done"><i></i>Hecha</span></div>
+        <div class="row" role="listitem"><div class="num t2" style="width:44px">M 30</div><div class="grow"><div class="t0">Torso A - Empuje y tirón</div><div class="t2">Pasada sin registrar</div></div><button class="btn btn--sm btn--ghost" data-skip>Omitir</button></div>
+        <div class="row" role="listitem"><div class="num t2" style="width:44px">X 1</div><div class="grow"><div class="t0">Carrera</div><div class="t2">Hoy · 30 min Z2</div></div><span class="st st--planned"><i></i>Planificada</span></div>
+        <div class="row" role="listitem"><div class="num t2" style="width:44px">J 2</div><div class="grow"><div class="t0">Lower B - Posterior y unilateral</div></div><button class="btn btn--sm btn--ghost" data-skip>Omitir</button></div>
+        <div class="row" role="listitem"><div class="num t2" style="width:44px">V 3</div><div class="grow"><div class="t0">Pista - Técnica</div><div class="t2">Movida al domingo por partido</div></div><span class="st st--moved"><i></i>Movida</span></div>
+        <div class="row" role="listitem"><div class="num t2" style="width:44px">S 4</div><div class="grow"><div class="t0">Torso B - Completo</div></div><button class="btn btn--sm btn--ghost" data-skip>Omitir</button></div>
+        <div class="row" role="listitem"><div class="num t2" style="width:44px">D 5</div><div class="grow"><div class="t0" style="color:var(--text-2)">Carrera</div><div class="t2">Viaje</div></div><span class="st st--skipped"><i></i>Omitida</span></div>
+      </div>
+
+      <h2 class="sec">Volumen fraccional · semana 2</h2>
+      <div class="panel vol" role="table" aria-label="Series efectivas frente a objetivo">
+        <span class="m">Cuádriceps</span><span class="bar"><span style="width:30%"></span></span><span class="v num">3 / 10</span>
+        <span class="m">Glúteo</span><span class="bar"><span style="width:33%"></span></span><span class="v num">3 / 9</span>
+        <span class="m">Isquios</span><span class="bar"><span style="width:33%"></span></span><span class="v num">3 / 9</span>
+        <span class="m">Gemelo</span><span class="bar"><span style="width:33%"></span></span><span class="v num">3 / 9</span>
+        <span class="m">Pecho</span><span class="bar"><span style="width:0"></span></span><span class="v num">0 / 10</span>
+        <span class="m">Dorsal</span><span class="bar"><span style="width:0"></span></span><span class="v num">0 / 9</span>
+        <span class="m">Hombro lateral</span><span class="bar"><span style="width:0"></span></span><span class="v num">0 / 10</span>
+        <span class="m t2" style="grid-column:1/-1">4 grupos más a 0 · ver todos</span>
+      </div>
+
+      <h2 class="sec">Impacto · últimos 7 días</h2>
+      <div class="panel">
+        <div class="row"><div class="grow t0">Carrera</div><span class="num t0">1 salida · 4,6 km · 28 min</span></div>
+        <div class="row"><div class="grow t0">Tope próxima salida</div><span class="num t0">5,06 km</span></div>
+        <div class="row"><div class="grow t0">Contactos de salto</div><span class="num t0">0</span></div>
+        <div class="row"><div class="grow t0">Tibia (máx. 3 días)</div><span class="t2">Sin registros</span></div>
+      </div>
+    </div>
+    <nav class="nav n4" aria-label="Principal">
+      <button data-go="hoyA"><svg width="22" height="22"><use href="#i-today"/></svg>Hoy</button>
+      <button aria-current="page"><svg width="22" height="22"><use href="#i-week"/></svg>Semana</button>
+      <button><svg width="22" height="22"><use href="#i-progress"/></svg>Progreso</button>
+      <button data-go="actividad"><svg width="22" height="22"><use href="#i-log"/></svg>Registrar</button>
+    </nav>
+  </section>
+
+  <!-- ============ REGISTRAR ACTIVIDAD ============ -->
+  <section class="screen" id="actividad" aria-label="Registrar actividad" hidden>
+    <div class="body">
+      <div class="head">
+        <div class="date-btn" style="padding:0">Registrar actividad</div>
+        <div class="ctx">Enlazada a <b>Carrera · hoy</b>. Al guardar, la sesión queda hecha.</div>
+      </div>
+
+      <div class="field"><span class="lbl">Actividad</span>
+        <div class="seg" data-single>
+          <button class="chip" aria-pressed="true">Carrera</button><button class="chip" aria-pressed="false">Sprint</button><button class="chip" aria-pressed="false">Pista</button><button class="chip" aria-pressed="false">Pliometría</button><button class="chip" aria-pressed="false">Otra</button>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="field"><label for="a-min">Duración</label>
+          <div class="numin"><input id="a-min" inputmode="numeric" value="30" aria-label="Minutos"><span class="unit">min</span></div></div>
+        <div class="field"><label for="a-km">Distancia <span class="hint">obligatoria</span></label>
+          <div class="numin"><input id="a-km" inputmode="decimal" value="" placeholder="0,00" aria-label="Kilómetros"><span class="unit">km</span></div></div>
+      </div>
+      <div class="cap"><span>Tope hoy (+10 % sobre 4,6 km)</span><span class="num">5,06 km</span></div>
+
+      <div class="field"><span class="lbl">RPE <span class="hint">0–10</span></span>
+        <div class="grid-chips" data-single>
+          <button class="chip num" aria-pressed="false">0</button><button class="chip num" aria-pressed="false">1</button><button class="chip num" aria-pressed="false">2</button><button class="chip num" aria-pressed="false">3</button><button class="chip num" aria-pressed="false">4</button><button class="chip num" aria-pressed="false">5</button><button class="chip num" aria-pressed="false">6</button><button class="chip num" aria-pressed="false">7</button><button class="chip num" aria-pressed="false">8</button><button class="chip num" aria-pressed="false">9</button><button class="chip num" aria-pressed="false">10</button>
+        </div>
+      </div>
+
+      <div class="field"><span class="lbl">Superficie</span>
+        <div class="seg" data-single>
+          <button class="chip" aria-pressed="true">Césped</button><button class="chip" aria-pressed="false">Tierra</button><button class="chip" aria-pressed="false">Asfalto</button><button class="chip" aria-pressed="false">Pista</button><button class="chip" aria-pressed="false">Cinta</button><button class="chip" aria-pressed="false">Más…</button>
+        </div>
+      </div>
+
+      <div class="two">
+        <div class="field"><label for="a-hr">Pulso medio</label>
+          <div class="numin"><input id="a-hr" inputmode="numeric" placeholder="—" aria-label="Pulsaciones por minuto"><span class="unit">ppm</span></div></div>
+        <div class="field"><label for="a-date">Fecha</label>
+          <input id="a-date" class="text-in" type="date" value="2026-10-01"></div>
+      </div>
+
+      <div class="field"><label for="a-ses">Sesión enlazada</label>
+        <select id="a-ses" class="text-in"><option>Carrera · hoy</option><option>Torso A · ayer</option><option>Sin enlazar</option></select></div>
+
+      <div class="field"><label for="a-notes">Notas</label><textarea id="a-notes" class="text-in" placeholder="Opcional"></textarea></div>
+
+      <h2 class="sec">Recientes</h2>
+      <div class="panel">
+        <div class="row"><div class="grow"><div class="t0">Carrera · dom 28 sep</div><div class="t2 num">4,6 km · 28 min · 148 ppm · RPE 5 · césped</div></div><button class="btn btn--sm btn--ghost">Editar</button></div>
+      </div>
+    </div>
+    <div class="foot"><button class="btn btn--primary btn--block">Guardar carrera</button></div>
+    <nav class="nav n4" aria-label="Principal">
+      <button data-go="hoyA"><svg width="22" height="22"><use href="#i-today"/></svg>Hoy</button>
+      <button data-go="semana"><svg width="22" height="22"><use href="#i-week"/></svg>Semana</button>
+      <button><svg width="22" height="22"><use href="#i-progress"/></svg>Progreso</button>
+      <button aria-current="page"><svg width="22" height="22"><use href="#i-log"/></svg>Registrar</button>
+    </nav>
+  </section>
+
+  <!-- ============ CHECK-IN ============ -->
+  <section class="screen" id="checkin" aria-label="Check-in" hidden>
+    <div class="body">
+      <div class="head">
+        <div class="date-btn" style="padding:0">Check-in</div>
+        <div class="ctx">Miércoles 1 oct · lo que no toques se guarda vacío</div>
+      </div>
+
+      <div class="two">
+        <div class="field"><label for="c-w">Peso</label>
+          <div class="numin"><input id="c-w" inputmode="decimal" placeholder="—" aria-label="Peso en kg"><span class="unit">kg</span></div></div>
+        <div class="field"><label for="c-s">Sueño</label>
+          <div class="numin"><input id="c-s" inputmode="decimal" placeholder="—" aria-label="Horas de sueño"><span class="unit">h</span></div></div>
+      </div>
+
+      <div class="tibia" id="tibia" data-level="none">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px">
+          <div><div class="t0">Tibia</div><div class="t2">Molestia en la cara interna de la tibia (0 = nada, 10 = máxima)</div></div>
+          <span class="val" id="tibia-val">—</span>
+        </div>
+        <div class="scale" id="tibia-scale" role="group" aria-label="Tibia 0 a 10"></div>
+        <div class="scale-legend"><span>0–2 normal</span><span>3–4 aviso</span><span>5+ alerta</span></div>
+      </div>
+
+      <div class="field"><span class="lbl">Energía <span class="hint">1–10</span></span>
+        <div class="grid-chips ten" data-single data-clearable id="energy"></div>
+      </div>
+
+      <button class="btn btn--block btn--ghost" id="more-btn" aria-expanded="false">Más campos · calidad de sueño, estrés, hambre, pasos, notas</button>
+      <div id="more" class="stack" hidden>
+        <div class="field"><span class="lbl">Calidad de sueño <span class="hint">1–10</span></span><div class="grid-chips ten" data-single data-clearable data-fill="10"></div></div>
+        <div class="field"><span class="lbl">Estrés <span class="hint">1–10</span></span><div class="grid-chips ten" data-single data-clearable data-fill="10"></div></div>
+        <div class="field"><label for="c-steps">Pasos</label><div class="numin"><input id="c-steps" inputmode="numeric" placeholder="—"></div></div>
+      </div>
+    </div>
+    <div class="foot"><button class="btn btn--primary btn--block">Guardar check-in</button></div>
+    <nav class="nav n4" aria-label="Principal">
+      <button data-go="hoyA" aria-current="page"><svg width="22" height="22"><use href="#i-today"/></svg>Hoy</button>
+      <button data-go="semana"><svg width="22" height="22"><use href="#i-week"/></svg>Semana</button>
+      <button><svg width="22" height="22"><use href="#i-progress"/></svg>Progreso</button>
+      <button data-go="actividad"><svg width="22" height="22"><use href="#i-log"/></svg>Registrar</button>
+    </nav>
+  </section>
+
+  <!-- ============ SESIÓN EN CURSO · consola de pulgar ============ -->
+  <section class="screen" id="sesion" aria-label="Sesión en curso" hidden style="overflow:hidden">
+    <div class="ses-top">
+      <button class="exit" data-go="hoyA" aria-label="Salir de la sesión (se guarda el borrador)">Salir</button>
+      <div class="timer" id="timer" aria-live="polite"><span class="tv" id="tv">—:—</span><span class="tl" id="tl">El descanso arranca al registrar una serie</span></div>
+      <span class="prog num" id="prog">0/11</span>
+    </div>
+    <div class="ctxt">
+      <div class="t2">Torso A - Empuje y tirón · martes 30 sep</div>
+      <h3 class="ex-name" id="ex-name"></h3>
+      <div class="set-of" id="set-of"></div>
+      <div class="ref" id="ref"></div>
+      <div class="links">
+        <button id="notes-btn" aria-expanded="false">Notas técnicas</button>
+        <button id="table-btn">Ver toda la sesión</button>
+      </div>
+      <div class="notes-box" id="notes" hidden></div>
+      <div class="done-sets" id="done-sets"></div>
+    </div>
+    <div class="console">
+      <div class="stepper" id="st-w"><span class="sl" id="w-lbl">kg por mano</span><button data-step="w" data-d="-1" aria-label="Menos carga">−</button><span class="sv" id="w-val"></span><button data-step="w" data-d="1" aria-label="Más carga">+</button></div>
+      <div class="stepper"><span class="sl" id="r-lbl">reps</span><button data-step="r" data-d="-1" aria-label="Una rep menos">−</button><span class="sv" id="r-val"></span><button data-step="r" data-d="1" aria-label="Una rep más">+</button></div>
+      <div class="rpe-lbl"><span>RPE · pulsa para registrar la serie</span><span id="rpe-target"></span></div>
+      <div class="rpe-grid" id="rpe-grid" role="group" aria-label="RPE de la serie"></div>
+      <div class="ses-actions">
+        <span class="sync" id="sync"><i></i>Todo guardado</span>
+        <button class="btn btn--sm btn--ghost" id="skip-set">Saltar serie</button>
+        <button class="btn btn--sm" id="finish">Finalizar</button>
+      </div>
+    </div>
+    <div class="sheet" id="sheet" hidden>
+      <div style="display:flex;justify-content:space-between;align-items:center"><h3 class="ex-name" style="font-size:18px">Sesión completa</h3><button class="btn btn--sm" id="sheet-close">Cerrar</button></div>
+      <div style="overflow-x:auto"><table><thead><tr><th>Ejercicio</th><th>Serie</th><th>Carga</th><th>Reps</th><th>RPE</th></tr></thead><tbody id="sheet-body"></tbody></table></div>
+    </div>
+    <div class="toast" id="toast" hidden role="status"><span class="grow">Sesión registrada · <span class="num">11</span> <span id="toast-unit">series</span></span><button id="undo">Deshacer</button><span class="bar"></span></div>
+  </section>
+</div>
+
+<p class="mock-note"><b>Sesión en curso</b> (consola de pulgar): pulsar un RPE registra la serie y arranca el descanso; la siguiente serie hereda carga y reps, nunca el RPE. Progreso queda para la fase 3 con datos reales de e1RM y volumen.</p>
+
+<script>
+(function () {
+  const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  function show(id) {
+    $$('.screen').forEach(s => { s.hidden = s.id !== id; });
+    $$('.tabs-pick button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.show === id)));
+    const scr = document.getElementById(id); if (scr) scr.scrollTop = 0;
+    try { localStorage.setItem('forge-mock-screen', id); } catch (e) {}
+  }
+  $$('.tabs-pick button').forEach(b => b.addEventListener('click', () => show(b.dataset.show)));
+  $$('[data-go]').forEach(b => b.addEventListener('click', () => show(b.dataset.go)));
+  const start = (location.hash || '').slice(1);
+  let saved = null; try { saved = localStorage.getItem('forge-mock-screen'); } catch (e) {}
+  if (start && document.getElementById(start)) show(start); else if (saved && document.getElementById(saved)) show(saved);
+
+  // Tema de la app (independiente del tema del visor)
+  function theme(t) { document.documentElement.setAttribute('data-forge', t); $$('[data-forge-theme]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.forgeTheme === t))); }
+  $$('[data-forge-theme]').forEach(b => b.addEventListener('click', () => theme(b.dataset.forgeTheme)));
+  theme('dark');
+
+  // La fecha abre el calendario nativo
+  $$('.date-btn input[type=date]').forEach(inp => inp.closest('.date-btn').addEventListener('click', () => { try { inp.showPicker(); } catch (e) { inp.focus(); } }));
+
+  // Rellenar escalas 1–10
+  function fill(el, n) { for (let i = 1; i <= n; i++) { const b = document.createElement('button'); b.className = 'chip num'; b.textContent = i; b.setAttribute('aria-pressed', 'false'); el.appendChild(b); } }
+  fill($('#energy'), 10); $$('[data-fill]').forEach(el => fill(el, +el.dataset.fill));
+
+  // Grupos de selección única (los "clearable" se vacían al volver a pulsar → null)
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-single] > button'); if (!b) return;
+    const g = b.parentElement, on = b.getAttribute('aria-pressed') === 'true';
+    $$('button', g).forEach(x => x.setAttribute('aria-pressed', 'false'));
+    if (!(on && g.hasAttribute('data-clearable'))) b.setAttribute('aria-pressed', 'true');
+  });
+
+  // Tibia con color semántico
+  const sc = $('#tibia-scale'), tb = $('#tibia'), tv = $('#tibia-val');
+  for (let i = 0; i <= 10; i++) { const b = document.createElement('button'); b.textContent = i; b.setAttribute('aria-pressed', 'false'); b.addEventListener('click', () => {
+    const on = b.getAttribute('aria-pressed') === 'true';
+    $$('button', sc).forEach(x => x.setAttribute('aria-pressed', 'false'));
+    if (on) { tb.dataset.level = 'none'; tv.textContent = '—'; return; }
+    b.setAttribute('aria-pressed', 'true'); tv.textContent = i; tb.dataset.level = i >= 5 ? 'err' : i >= 3 ? 'warn' : 'none';
+  }); sc.appendChild(b); }
+
+  // Más campos
+  const mb = $('#more-btn'), more = $('#more');
+  mb.addEventListener('click', () => { more.hidden = !more.hidden; mb.setAttribute('aria-expanded', String(!more.hidden)); });
+
+  // Omitir con motivo opcional (inline, sin diálogo)
+  $$('[data-skip]').forEach(b => b.addEventListener('click', () => {
+    const row = b.closest('.row'); b.remove();
+    const st = document.createElement('span'); st.className = 'st st--skipped'; st.innerHTML = '<i></i>Omitida'; row.appendChild(st);
+  }));
+
+  // ===== Sesión en curso (maqueta) =====
+  const EX = [
+    { name: 'Press de banca con mancuernas', conv: 'per_hand', w: 30, step: 2, reps: 8, sets: 3, target: '30 kg × 6–8 · RPE 8', last: '30 × 8 @ 8 · 22 jul', notes: 'Escápulas atrás y abajo, 1 s de pausa en el pecho.' },
+    { name: 'Dominada prona', conv: 'added', w: 5, step: 2.5, reps: 6, sets: 3, target: '+5 kg × 6 · RPE 8', last: '+2,5 × 7 @ 8,5 · 22 jul', notes: 'Rango completo, sin kipping.' },
+    { name: 'Elevación lateral con mancuernas', conv: 'per_hand', w: 10, step: 1, reps: 15, sets: 3, target: '10 kg × 12–15 · RPE 9', last: '9 × 15 @ 9 · 22 jul', notes: 'Codo ligeramente por delante, sin balanceo.' },
+    { name: 'Face pull con banda', conv: 'none', w: null, step: 0, reps: 15, sets: 2, target: '15 reps · RPE 8', last: '15 @ 7,5 · 22 jul', notes: 'Rotación externa al final.' }
+  ];
+  const LBL = { per_hand: 'kg por mano', total: 'kg totales', added: 'lastre (kg)', none: '' };
+  const total = EX.reduce((a, e) => a + e.sets, 0);
+  let ei = 0, si = 1, w = EX[0].w, r = EX[0].reps, log = [], tick = null;
+  const fmt = n => (Math.round(n * 10) / 10).toString().replace('.', ',');
+  function render() {
+    const e = EX[ei]; if (!e) return;
+    $('#ex-name').textContent = e.name;
+    $('#set-of').innerHTML = 'Serie <span class="num">' + si + '</span> de <span class="num">' + e.sets + '</span>';
+    $('#ref').innerHTML = '<span>Objetivo</span><span class="num">' + e.target + '</span><span>Última vez</span><span class="num">' + e.last + '</span>';
+    $('#notes').textContent = e.notes;
+    $('#st-w').hidden = e.conv === 'none'; $('#w-lbl').textContent = LBL[e.conv];
+    $('#w-val').textContent = e.conv === 'added' ? '+' + fmt(w) : fmt(w ?? 0);
+    $('#r-val').textContent = r;
+    $('#rpe-target').textContent = 'objetivo ' + e.target.split('RPE ')[1];
+    $('#prog').textContent = log.length + '/' + total;
+    $('#done-sets').innerHTML = log.filter(x => x.ex === e.name).map(x => '<div><span>Serie ' + x.s + '</span><span class="num">' + (x.w == null ? '' : (e.conv === 'added' ? '+' : '') + fmt(x.w) + ' × ') + x.r + ' @ ' + fmt(x.rpe) + '</span></div>').join('');
+  }
+  const grid = $('#rpe-grid');
+  for (let v = 6; v <= 10; v += 0.5) { const b = document.createElement('button'); b.textContent = fmt(v); b.dataset.v = v; grid.appendChild(b); }
+  function advance() {
+    const e = EX[ei];
+    if (si < e.sets) { si++; } else if (ei < EX.length - 1) { ei++; si = 1; w = EX[ei].w; r = EX[ei].reps; }
+    render();
+  }
+  grid.addEventListener('click', ev => {
+    const b = ev.target.closest('button'); if (!b) return;
+    const e = EX[ei];
+    log.push({ ex: e.name, s: si, w: e.conv === 'none' ? null : w, r, rpe: +b.dataset.v });
+    try { navigator.vibrate && navigator.vibrate(30); } catch (x) {}
+    rest(e.name.includes('Elevación') || e.name.includes('Face') ? 75 : 150);
+    const sy = $('#sync'); sy.innerHTML = '<i style="background:var(--warn)"></i>1 pendiente'; setTimeout(() => { sy.innerHTML = '<i></i>Todo guardado'; }, 1200);
+    advance();
+  });
+  $$('[data-step]').forEach(b => b.addEventListener('click', () => {
+    const d = +b.dataset.d;
+    if (b.dataset.step === 'w') w = Math.max(0, (w ?? 0) + d * EX[ei].step); else r = Math.max(0, r + d);
+    render();
+  }));
+  function rest(sec) {
+    clearInterval(tick); const t = $('#timer'); t.classList.remove('done'); let left = sec;
+    const show = () => { $('#tv').textContent = Math.floor(left / 60) + ':' + String(left % 60).padStart(2, '0'); };
+    $('#tl').textContent = 'Descanso'; show();
+    tick = setInterval(() => { left--; show(); if (left <= 0) { clearInterval(tick); t.classList.add('done'); $('#tl').textContent = 'Descanso terminado'; try { navigator.vibrate && navigator.vibrate([200, 100, 200]); } catch (x) {} } }, 1000);
+  }
+  $('#skip-set').addEventListener('click', advance);
+  const nb = $('#notes-btn'); nb.addEventListener('click', () => { $('#notes').hidden = !$('#notes').hidden; nb.setAttribute('aria-expanded', String(!$('#notes').hidden)); });
+  $('#table-btn').addEventListener('click', () => {
+    $('#sheet-body').innerHTML = EX.map(e => Array.from({ length: e.sets }, (_, i) => {
+      const x = log.find(l => l.ex === e.name && l.s === i + 1);
+      const load = e.conv === 'none' ? '—' : (x ? (e.conv === 'added' ? '+' : '') + fmt(x.w) : '<span class="empty">' + (e.conv === 'added' ? '+' : '') + fmt(e.w) + '</span>');
+      return '<tr><td>' + (i === 0 ? e.name : '') + '</td><td class="num">' + (i + 1) + '</td><td class="num">' + load + '</td><td class="num">' + (x ? x.r : '<span class="empty">' + e.reps + '</span>') + '</td><td class="num">' + (x ? fmt(x.rpe) : '<span class="empty">—</span>') + '</td></tr>';
+    }).join('')).join('');
+    $('#sheet').hidden = false;
+  });
+  $('#sheet-close').addEventListener('click', () => { $('#sheet').hidden = true; });
+  let undoT = null;
+  $('#finish').addEventListener('click', () => {
+    const t = $('#toast'); t.querySelector('.num').textContent = log.length; $('#toast-unit').textContent = log.length === 1 ? 'serie' : 'series'; t.hidden = false;
+    const bar = t.querySelector('.bar'); bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = '';
+    clearTimeout(undoT); undoT = setTimeout(() => { t.hidden = true; $('#sync').innerHTML = '<i></i>Sesión enviada'; }, 10000);
+  });
+  $('#undo').addEventListener('click', () => { clearTimeout(undoT); $('#toast').hidden = true; $('#sync').innerHTML = '<i></i>Sesión abierta de nuevo'; });
+  render();
+})();
+</script>

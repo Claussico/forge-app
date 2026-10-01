@@ -46,8 +46,9 @@ Los datos calculados vienen de `magnus_briefing()` (RPC) y de las vistas. No rec
 
 ## 4. Sesión en curso: requisitos
 
-- Cada serie viene precargada con el objetivo (carga, reps y RIR/RPE). Confirmarla tal cual es un toque.
-- La siguiente serie hereda los valores de la anterior.
+- Cada serie viene precargada con la carga y las reps objetivo. El RPE objetivo se muestra como referencia, pero **nunca se precarga como valor guardado**.
+- Confirmar una serie = pulsar su RPE (un toque). El RPE se pulsa siempre; no forma parte de ninguna confirmación implícita. *(Corrección del 2026-10-01: en producción, 228 de 341 series comparables (67 %) tienen el RPE real igual al objetivo.)*
+- La siguiente serie hereda la carga y las reps de la anterior (no el RPE).
 - RPE: botones grandes de 6 a 10 en pasos de 0,5. En series efectivas es obligatorio, porque las vistas de volumen no cuentan series sin RPE.
 - Etiqueta de carga según `load_convention` del catálogo: "kg por mano", "kg totales", "lastre" o sin campo de peso.
 - Temporizador de descanso: arranca solo al confirmar una serie, vibra al terminar y lo hace visible en la parte superior.
@@ -56,6 +57,8 @@ Los datos calculados vienen de `magnus_briefing()` (RPC) y de las vistas. No rec
 - Saltos: reps = contactos, sin peso.
 - Carrera programada dentro de la semana: abre el formulario de `external_load` con la sesión ya enlazada.
 - Ver las `execution_notes` y la nota técnica de cada ejercicio sin salir de la pantalla.
+
+- Check-in: los campos que no se tocan se envían como `null`, nunca con un valor por defecto.
 
 ## 5. Dirección de diseño
 

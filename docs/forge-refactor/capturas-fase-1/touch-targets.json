@@ -1,0 +1,391 @@
+{
+ "01-login": [
+  {
+   "tag": "input",
+   "type": "email",
+   "label": "",
+   "w": 334,
+   "h": 44
+  },
+  {
+   "tag": "input",
+   "type": "password",
+   "label": "",
+   "w": 334,
+   "h": 44
+  }
+ ],
+ "02-hoy-sin-sesion": [
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día anterior",
+   "w": 32,
+   "h": 24
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día siguiente",
+   "w": 30,
+   "h": 22
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "○ Check-in pendiente",
+   "w": 145,
+   "h": 29
+  }
+ ],
+ "03-hoy-logger": [
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día anterior",
+   "w": 32,
+   "h": 24
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "IR A HOY",
+   "w": 47,
+   "h": 15
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día siguiente",
+   "w": 30,
+   "h": 22
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "",
+   "w": 32,
+   "h": 32
+  }
+ ],
+ "03b-hoy-logger-completo": [
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día anterior",
+   "w": 32,
+   "h": 24
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "IR A HOY",
+   "w": 47,
+   "h": 15
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día siguiente",
+   "w": 30,
+   "h": 22
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "",
+   "w": 32,
+   "h": 32
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "",
+   "w": 32,
+   "h": 32
+  }
+ ],
+ "04-hoy-sesion-registrada": [
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día anterior",
+   "w": 32,
+   "h": 24
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "IR A HOY",
+   "w": 47,
+   "h": 15
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "Día siguiente",
+   "w": 30,
+   "h": 22
+  }
+ ],
+ "05-checkin-rapido": [
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 100,
+   "h": 29
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 100,
+   "h": 29
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "7",
+   "w": 316,
+   "h": 4
+  },
+  {
+   "tag": "button",
+   "type": "submit",
+   "label": "+ Añadir más contexto",
+   "w": 350,
+   "h": 40
+  }
+ ],
+ "06-checkin-completo": [
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 100,
+   "h": 29
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 100,
+   "h": 29
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "7",
+   "w": 316,
+   "h": 4
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "7",
+   "w": 316,
+   "h": 4
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "4",
+   "w": 316,
+   "h": 4
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "5",
+   "w": 316,
+   "h": 4
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "range",
+   "label": "0",
+   "w": 129,
+   "h": 2
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 100,
+   "h": 29
+  }
+ ],
+ "07-reporte": [
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  },
+  {
+   "tag": "input",
+   "type": "number",
+   "label": "",
+   "w": 70,
+   "h": 39
+  }
+ ],
+ "08-semana": [],
+ "08b-semana-completa": []
+}

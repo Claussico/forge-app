@@ -52,7 +52,8 @@ Una herramienta personal hecha a medida de un único atleta técnico y de su ent
 - **Histórico**: tiene que seguir leyéndose igual. Los nombres antiguos de ejercicios se resuelven por alias.
 - **Seguridad**: la clave `service_role` nunca va en el cliente.
 - **Carga**: la etiqueta depende de `load_convention` del catálogo ("kg por mano", "kg totales", "lastre" o sin peso). En los saltos, reps = contactos, sin peso.
-- **RPE**: de 6 a 10 en pasos de 0,5; obligatorio en las series efectivas.
+- **RPE**: de 6 a 10 en pasos de 0,5; obligatorio en las series efectivas. Nunca se precarga ni se infiere: se pulsa siempre. El histórico de RPE anterior al refactor no es fiable (67 % igual al objetivo) y se marca en la base de datos.
+- **Valores por defecto**: ningún campo no tocado se envía con un valor por defecto; se envía `null`.
 - **Tibia**: escala de dolor con umbrales 0–2 (neutro), 3–4 (aviso) y 5 o más (alerta).
 
 ## Brand Commitments
@@ -70,7 +71,7 @@ Una herramienta personal hecha a medida de un único atleta técnico y de su ent
 ## Product Principles
 
 1. **El registro es sagrado.** Ninguna serie se pierde, ni con mala cobertura ni si se cierra la app.
-2. **Lo prescrito es el valor por defecto.** Confirmar lo planificado cuesta un toque; desviarse cuesta pocos más y nunca exige teclado.
+2. **Lo prescrito es el punto de partida, no el dato.** Carga y reps vienen precargadas; el RPE se pulsa siempre. Registrar una serie cuesta un toque; desviarse cuesta pocos más y nunca exige teclado.
 3. **Los datos ya calculados se muestran, no se recalculan.** La verdad está en la base de datos (vistas y RPC).
 4. **Datos antes que motivación.** Hay que mostrar números precisos y el estado real.
 

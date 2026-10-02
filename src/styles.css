@@ -39,14 +39,18 @@ html[data-theme="light"] {
 /* Armazón fijo: el documento nunca se desplaza (sin rebote de iOS). Solo hace scroll el
    contenedor de contenido (.body / .ses-ctx); la barra de pestañas va fija fuera de él. */
 html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
+/* Fondo del documento = color de la barra: si iOS deja algo de página por debajo de la barra
+   (zona segura inferior), se ve como continuación de la barra y no como una franja negra. */
+html, body { background: var(--bg-1); }
 body {
-  background: var(--bg-0); color: var(--text-1);
+  color: var(--text-1);
   font-family: var(--ff-sans); font-size: 15px; line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
 #root {
-  display: flex; flex-direction: column; max-width: 480px; margin: 0 auto;
-  height: 100dvh; overflow: hidden; position: relative;
+  /* fixed + inset 0: ocupa la pantalla real del iPhone sin depender de 100dvh */
+  position: fixed; inset: 0; max-width: 480px; margin: 0 auto;
+  display: flex; flex-direction: column; overflow: hidden; background: var(--bg-0);
   padding-top: env(safe-area-inset-top, 0px); /* sin padding inferior: la zona segura de abajo la cubre la barra */
 }
 .app { flex: 1; min-height: 0; display: flex; flex-direction: column; padding-bottom: calc(57px + var(--safe-b)); }

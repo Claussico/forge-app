@@ -145,6 +145,14 @@ Payload:
 - **"Última vez"**: muestra el RPE solo si `exercise_logs.rpe_reliability = 'reported'`. En el resto de casos, solo carga × reps.
 - **Sesión atrasada**: al registrar una sesión planificada pasada, preguntar "¿Cuándo la hiciste?" (Hoy, Ayer u Otra fecha) y guardarla como `performed_date`, en hora local.
 
+## 12. Sesiones de tests — imprescindible (release 2)
+
+- Una sesión programada con `session_type = 'tests'` abre la pantalla de tests (apartado 10) con la sesión enlazada.
+- Los resultados se guardan en `performance_tests`, que no tiene enlace con `programmed_sessions`. Para que la sesión pase a `done`, el botón "Marcar la sesión como hecha" guarda un `training_log` sin series con `save_training_log`:
+  `{ "client_id", "performed_date", "programmed_session_id", "session_type": "tests" }`.
+  El trigger marca la sesión como `done`, igual que en movilidad (apartado 9).
+- Estas sesiones no cuentan como sesiones de fuerza.
+
 ## Pruebas de aceptación
 
 Ejecutar en el SQL editor después de probar cada función en la app:

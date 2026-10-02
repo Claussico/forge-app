@@ -29,3 +29,19 @@ Supabase local restaurado desde el dump de producción del 2026-10-02 10:41, con
 - Ejercicios por tiempo: se muestran como "6 × 4 min", "15 min" o "2 × 25 s por lado".
 - Patrones `locomotion`, `mobility` y `flow` dentro de una sesión de fuerza o potencia: se registran con "Hecho", sin RPE, como los saltos.
 - Antes del inicio del bloque, Hoy indica cuándo empieza.
+- Suitcase carry: corregido en producción a `bodyweight_time` con `target {sets: 3, seconds: 35, per_side: true}` y la carga en las notas. Ya no hay metros como reps.
+
+## Botón "Ver demostración" (2026-10-02)
+
+Commit `33a4c94`. Enlace externo a `exercise_catalog.demo_url`, solo si es una URL https. La columna ya existe en producción.
+
+| Campo | Valor |
+|---|---|
+| Deployment anterior | `dpl_2L26uJMGQsjgkGifWn5PB5r44Ay1` |
+| Commit | `a6eb096` (release 2) |
+
+Para volver atrás: `vercel rollback dpl_2L26uJMGQsjgkGifWn5PB5r44Ay1 --scope claussicos-projects`. No toca la base de datos.
+
+## Pendiente
+
+Fase 4 (`/polish`, `/audit` final, mediciones y `DESIGN.md`): después de la primera semana real de uso, a partir del 12 de octubre.

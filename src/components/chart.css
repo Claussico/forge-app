@@ -1,0 +1,35 @@
+/* Paleta de datos validada (daltonismo y contraste) sobre las superficies de FORGE. */
+:root { --series-1: #3987e5; --series-2: #d95926; }
+html[data-theme="light"] { --series-1: #2a78d6; --series-2: #eb6834; }
+
+.chart { display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.chart-plot { position: relative; }
+.chart svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .tick { fill: var(--text-2); font-family: var(--ff-mono); font-size: 11px; }
+.chart .ref { stroke: var(--text-3); stroke-width: 1; stroke-dasharray: 4 4; }
+.chart .ref.warn { stroke: var(--warn); } .chart .ref.err { stroke: var(--err); }
+.chart .ref-lbl { fill: var(--text-2); font-size: 11px; font-family: var(--ff-sans); }
+.chart .cross { stroke: var(--text-2); stroke-width: 1; }
+.chart .line { fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .dot { fill: currentColor; stroke: var(--bg-1); stroke-width: 2; }
+.chart .dot.is-hollow { fill: var(--bg-1); stroke: currentColor; }
+.chart .dot.warn { fill: var(--warn); } .chart .dot.err { fill: var(--err); }
+.chart .end-lbl { fill: var(--text-1); font-size: 11px; font-family: var(--ff-sans); }
+.chart .bar-mark { fill: var(--series-1); }
+.chart .bar-mark.is-on { fill: var(--text-0); }
+.chart-empty { padding: 8px 0; }
+
+.chart-tip { position: absolute; top: 0; transform: translateX(-50%); background: var(--text-0); color: var(--bg-0); border-radius: 8px; padding: 6px 10px; font-size: 13px; display: flex; flex-direction: column; gap: 2px; pointer-events: none; white-space: nowrap; z-index: 2; }
+.chart-tip .tip-title { font-size: 12px; opacity: 0.75; }
+.chart-tip .tip-row { display: flex; align-items: center; gap: 6px; }
+.chart-tip i { width: 10px; height: 3px; border-radius: 2px; display: inline-block; }
+
+.chart-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 13px; color: var(--text-1); }
+.chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.chart-legend i { width: 14px; height: 3px; border-radius: 2px; display: inline-block; }
+.chart-legend i.is-dot { width: 8px; height: 8px; border-radius: 50%; }
+.chart-table summary { min-height: 44px; display: flex; align-items: center; color: var(--text-2); font-size: 13px; cursor: pointer; }
+.chart-table table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.chart-table td { padding: 6px 0; border-top: 1px solid var(--line); color: var(--text-1); }
+.chart-table td:last-child { text-align: right; color: var(--text-0); }

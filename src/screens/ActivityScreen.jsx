@@ -1,7 +1,7 @@
 // Carrera y otras actividades (spec §1). Con ?s=<id> llega enlazada a una sesión programada
 // (el trigger la marca como hecha). Edición y borrado de las recientes.
 import { useEffect, useMemo, useState } from 'react'
-import { fetchBriefing, fetchRecentLoads, fetchSessionsBetween, queueExternalLoad, queueExternalLoadUpdate, queueExternalLoadDelete } from '../lib/api'
+import { fetchBriefing, fetchRecentLoads, fetchSessionsBetween, fetchSession, queueExternalLoad, queueExternalLoadUpdate, queueExternalLoadDelete } from '../lib/api'
 import { useData } from '../lib/hooks'
 import { today, addDays, fmtRelative } from '../lib/dates'
 import { Choice, NumField, fmtNum, go } from '../components/ui'
@@ -25,6 +25,7 @@ export default function ActivityScreen({ sessionId, editId }) {
   const { data: briefing } = useData('briefing', fetchBriefing)
   const { data: recent, reload } = useData('loads', fetchRecentLoads)
   const { data: linkable } = useData('linkable:' + today(), () => fetchSessionsBetween(addDays(today(), -1), today()))
+  const { data: preset } = useData('session:' + (sessionId || 'none'), () => sessionId ? fetchSession(sessionId) : Promise.resolve(null), [sessionId])
   const [f, setF] = useState({ ...EMPTY, date: today(), programmed_session_id: sessionId || null })
   const [saving, setSaving] = useState(false)
   const [err, setErr] = useState('')
@@ -35,7 +36,11 @@ export default function ActivityScreen({ sessionId, editId }) {
   useEffect(() => { if (editing) setF({ ...EMPTY, ...editing }) }, [editing?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sesiones planned de hoy y de ayer (spec §1), más la enlazada si ya no está planned
-  const options = useMemo(() => (linkable || []).filter(s => s.status === 'planned' || s.id === f.programmed_session_id), [linkable, f.programmed_session_id])
+  const options = useMemo(() => {
+    const list = (linkable || []).filter(s => s.status === 'planned' || s.id === f.programmed_session_id)
+    if (preset && !list.some(s => s.id === preset.id)) list.unshift(preset) // adelantada o atrasada más de un día
+    return list
+  }, [linkable, preset, f.programmed_session_id])
   const linked = options.find(s => s.id === f.programmed_session_id)
   const linkedEx = linked?.exercises?.[0]
   const cap = briefing?.impact_7d?.next_run_cap_km

@@ -26,7 +26,7 @@ export function buildSteps(exercises = []) {
   return steps
 }
 
-const doseText = t => {
+export const doseText = t => {
   if (t.seconds != null) return `${t.sets ?? 1} × ${t.seconds} s${t.per_side ? ' por lado' : ''}`
   return `${t.sets ?? 1} × ${t.reps ?? '?'} reps${t.per_side ? ' por lado' : ''}`
 }

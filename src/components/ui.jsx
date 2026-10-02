@@ -12,7 +12,8 @@ export const Icon = {
   progress: p => <I {...p} d={<><path d="M3 20h18" /><path d="M4 16l5-5 4 3 7-8" /></>} />,
   log: p => <I {...p} d={<><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></>} />,
   chev: p => <I size={18} sw={1.8} {...p} d={<path d="M6 9l6 6 6-6" />} />,
-  right: p => <I size={18} sw={1.8} {...p} d={<path d="M9 6l6 6-6 6" />} />
+  right: p => <I size={18} sw={1.8} {...p} d={<path d="M9 6l6 6-6 6" />} />,
+  left: p => <I size={18} sw={1.8} {...p} d={<path d="M15 6l-6 6 6 6" />} />
 }
 
 // ---------- Router por hash: #/hoy, #/sesion/<id>, #/registrar/actividad?s=<id> ----------

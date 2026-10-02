@@ -1,17 +1,18 @@
 // Tests de rendimiento (spec §10). sided → dos filas (L y R). reps_fixed_load → ejercicio y carga.
 // flow_skill → conseguido (1) o no (0), con el hito en notes.
 import { useMemo, useState } from 'react'
-import { fetchTestCatalog, fetchTests, fetchCatalog, queueTests } from '../lib/api'
+import { fetchTestCatalog, fetchTests, fetchCatalog, fetchSession, queueTests, queueTrainingLog } from '../lib/api'
 import { useData } from '../lib/hooks'
 import { today, fmtRelative } from '../lib/dates'
-import { Choice, NumField, fmtNum, back } from '../components/ui'
+import { Choice, NumField, fmtNum, back, go } from '../components/ui'
 import './forms.css'
 
 const CAT = { mobility: 'Movilidad', jump: 'Salto', run: 'Carrera', strength: 'Fuerza', skill: 'Habilidad' }
 const UNIT = { deg: '°', cm: 'cm', m: 'm', reps: 'reps', pass: '' }
 const fmtVal = (v, unit) => unit === 'pass' ? (Number(v) === 1 ? 'Conseguido' : 'No conseguido') : `${fmtNum(v)}${UNIT[unit] === '°' ? '°' : ' ' + (UNIT[unit] || unit)}`
 
-export default function TestsScreen() {
+export default function TestsScreen({ sessionId }) {
+  const { data: session } = useData('session:' + (sessionId || 'none'), () => sessionId ? fetchSession(sessionId) : Promise.resolve(null), [sessionId])
   const { data: cat } = useData('test-catalog', fetchTestCatalog)
   const { data: hist, reload } = useData('tests', fetchTests)
   const { data: exCat } = useData('catalog', fetchCatalog)
@@ -60,6 +61,17 @@ export default function TestsScreen() {
           {!t && <div className="ctx">Elige el test que vas a registrar.</div>}
         </div>
         {msg && <p className="ctx" role="status">{msg}</p>}
+        {!t && session?.status === 'planned' && (
+          <div className="panel today-card">
+            <div className="t0">{session.session_name} · {fmtRelative(session.scheduled_date)}</div>
+            <p className="t2">Registra los tests de la sesión y, al terminar, márcala como hecha.</p>
+            <button className="btn btn--primary btn--block" onClick={async () => {
+              // Como la movilidad: un training_log sin series enlazado a la sesión; el trigger la marca done.
+              await queueTrainingLog({ client_id: crypto.randomUUID(), performed_date: today(), programmed_session_id: session.id, session_type: 'tests' })
+              go('/hoy')
+            }}>Marcar la sesión como hecha</button>
+          </div>
+        )}
 
         {!t && groups.map(([g, list]) => (
           <section key={g} className="stack" style={{ gap: 8 }}>

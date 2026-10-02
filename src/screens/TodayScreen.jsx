@@ -6,27 +6,7 @@ import { kv } from '../lib/queue'
 import { useData } from '../lib/hooks'
 import { today, fmtRelative, daysBetween } from '../lib/dates'
 import { DateButton, Status, fmtNum, go } from '../components/ui'
-
-const PHASE = { accumulation: 'Acumulación', intensification: 'Intensificación', realization: 'Realización', deload: 'Descarga', testing: 'Tests' }
-const TYPE_LABEL = { strength: 'Fuerza', power: 'Potencia', run: 'Carrera', mobility: 'Movilidad', flow: 'Flow', tests: 'Tests', other: 'Otra' }
-
-export function openSession(s) {
-  const t = s.session_type || 'strength'
-  if (t === 'mobility' || t === 'flow') go('/movilidad/' + s.id)
-  else if (t === 'run' || t === 'other') go('/registrar/actividad?s=' + s.id)
-  else if (t === 'tests') go('/registrar/tests')
-  else go('/sesion/' + s.id)
-}
-
-const actionLabel = (s, draft) => {
-  const t = s.session_type || 'strength'
-  if (draft) return 'Continuar sesión'
-  if (t === 'mobility' || t === 'flow') return 'Empezar movilidad'
-  if (t === 'run') return 'Registrar carrera'
-  if (t === 'other') return 'Registrar actividad'
-  if (t === 'tests') return 'Registrar tests'
-  return 'Empezar sesión'
-}
+import { PHASE, TYPE_LABEL, startSession, startLabel, viewSession } from '../lib/sessions'
 
 export default function TodayScreen({ date }) {
   const day = date || today()
@@ -68,7 +48,7 @@ export default function TodayScreen({ date }) {
           <div className="grow">{u.session} ({fmtRelative(u.date)}) sin registrar</div>
           <button className="btn btn--sm" onClick={async () => {
             const [s] = await fetchSessionsBetween(u.date, u.date).then(r => r.filter(x => x.session_name === u.session && x.status === 'planned'))
-            if (s) openSession(s)
+            if (s) startSession(s)
           }}>Registrar</button>
         </div>
       ))}
@@ -98,7 +78,8 @@ export default function TodayScreen({ date }) {
             {t !== 'run' && ex.length > 0 && (
               <p className="t2">{ex.map(e => e.name).join(' · ')}</p>
             )}
-            {canAct && <button className="btn btn--primary btn--block" onClick={() => openSession(s)}>{actionLabel(s, drafts[s.id])}</button>}
+            {canAct && <button className="btn btn--primary btn--block" onClick={() => startSession(s)}>{startLabel(s, drafts[s.id])}</button>}
+            <button className="btn btn--ghost btn--block" onClick={() => viewSession(s, 'hoy')}>{s.status === 'done' ? 'Ver lo registrado' : future ? 'Ver sesión o hacerla hoy' : 'Ver sesión'}</button>
           </div>
         )
       })}

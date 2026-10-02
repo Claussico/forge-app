@@ -174,3 +174,8 @@ html.kb-open .nav { display: none; }
 .link-btn { background: none; border: 0; color: var(--accent); font-size: 14px; text-decoration: underline; text-underline-offset: 3px; min-height: 44px; padding: 0 4px; }
 .cap--over { background: var(--err-soft); color: var(--text-0); }
 .cap--over .num { color: var(--err); }
+
+/* Detalle de sesión */
+.back-btn { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px 0 0; background: none; border: 0; color: var(--text-2); font-size: 14px; }
+.detail-row { flex-direction: column; align-items: stretch; gap: 4px; padding-block: 12px; }
+.detail-sets { display: flex; flex-wrap: wrap; gap: 4px 14px; color: var(--text-1); font-size: 14px; }

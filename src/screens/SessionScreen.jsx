@@ -13,6 +13,8 @@ import './session.css'
 
 const RPES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
 const LOAD_LABEL = { per_hand: 'kg por mano', total: 'kg totales', added: 'lastre (kg)' }
+const ZONES = ['hombro', 'codo', 'muñeca', 'lumbar', 'cadera', 'rodilla', 'tibia', 'tobillo', 'otra']
+const INTENSITY = { 1: 'leve', 2: 'moderada', 3: 'fuerte' }
 const firstInt = v => { const m = String(v ?? '').match(/\d+/); return m ? Number(m[0]) : null }
 
 export function buildPlan(session, catalog) {
@@ -46,7 +48,7 @@ function prescribed(e, k) {
   }
 }
 
-function targetText(e) {
+export function targetText(e) {
   const t = e.target
   const w = t.weight_kg ?? t.weight
   const load = e.conv === 'none' || w == null ? '' : (e.conv === 'added' ? '+' : '') + fmtNum(w) + ' kg × '
@@ -75,7 +77,8 @@ export default function SessionScreen({ id }) {
   const { data: lastTimes } = useData('last:' + ids.join(','), () => fetchLastTimes(ids), [ids.join(',')])
 
   const [d, setD] = useState(null) // borrador
-  const [sheet, setSheet] = useState(null) // 'table' | 'when' | 'notes'
+  const [sheet, setSheet] = useState(null) // 'table' | 'when' | 'notes' | 'issue'
+  const [issue, setIssue] = useState({ zone: null, intensity: null })
   const [pending, setPending] = useState(null) // payload en la ventana de deshacer
   const [now, setNow] = useState(Date.now())
   const undoT = useRef(null)
@@ -170,7 +173,7 @@ export default function SessionScreen({ id }) {
       session_type: session.session_type || null,
       duration_min: Math.max(1, Math.round((Date.now() - d.started) / 60000)),
       sets: d.logged.map(({ exercise_id, ...s }) => ({ ...s, exercise_id: exercise_id || null })),
-      issues: []
+      issues: d.issues || []
     }
     setPending(payload)
     clearTimeout(undoT.current)
@@ -228,8 +231,15 @@ export default function SessionScreen({ id }) {
             <div className="ses-links">
               {e.notes && <button onClick={() => setSheet(sheet === 'notes' ? null : 'notes')} aria-expanded={sheet === 'notes'}>Notas técnicas</button>}
               <button onClick={() => setSheet('table')}>Ver toda la sesión</button>
+              <button onClick={() => { setIssue({ zone: null, intensity: null }); setSheet('issue') }}>Molestia</button>
             </div>
             {sheet === 'notes' && <p className="ses-notes">{e.notes}</p>}
+            {(d.issues || []).filter(i => i.exercise_name === e.name).map((i, k) => (
+              <div className="ses-issue" key={k}>
+                <span>Molestia en {i.zone} · {INTENSITY[i.intensity]}</span>
+                <button onClick={() => update({ issues: d.issues.filter(x => x !== i) })} aria-label="Quitar molestia">Quitar</button>
+              </div>
+            ))}
             {done.length > 0 && (
               <ul className="ses-done">
                 {done.map(s => (
@@ -302,6 +312,24 @@ export default function SessionScreen({ id }) {
           </div>
           <p className="t2">Toca una fila para ir a esa serie.</p>
           <button className="btn btn--block" onClick={undoLast} disabled={!d.logged.length}>Deshacer la última serie</button>
+        </Sheet>
+      )}
+
+      {sheet === 'issue' && e && (
+        <Sheet label="Molestia" onClose={() => setSheet(null)}>
+          <h2>Molestia en {e.name}</h2>
+          <div className="field"><span className="lbl">Zona</span>
+            <div className="seg" role="group" aria-label="Zona">
+              {ZONES.map(z => <button key={z} className="chip" aria-pressed={issue.zone === z} onClick={() => setIssue({ ...issue, zone: z })}>{z}</button>)}
+            </div>
+          </div>
+          <div className="field"><span className="lbl">Intensidad</span>
+            <div className="side-row" role="group" aria-label="Intensidad">
+              {[1, 2, 3].map(n => <button key={n} className="chip" aria-pressed={issue.intensity === n} onClick={() => setIssue({ ...issue, intensity: n })}>{n} · {INTENSITY[n]}</button>)}
+            </div>
+          </div>
+          <button className="btn btn--primary btn--block" disabled={!issue.zone || !issue.intensity}
+            onClick={() => { update({ issues: [...(d.issues || []), { exercise_name: e.name, zone: issue.zone, intensity: issue.intensity }] }); setSheet(null) }}>Añadir molestia</button>
         </Sheet>
       )}
 

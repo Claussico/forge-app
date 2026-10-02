@@ -119,3 +119,31 @@ export const queueTests = async rows => {
 }
 
 export const queueMeasurements = fields => insertQueued('body_measurements', { date: today(), recorded_at: new Date().toISOString(), ...fields })
+
+// ---------- Release 2: detalle de sesión, semana y progreso ----------
+
+// Lo registrado para una sesión programada: el training_log más reciente con sus series y molestias,
+// o la actividad (carrera…) enlazada.
+export async function fetchSessionRecord(sessionId) {
+  const [log, load] = await Promise.all([
+    supabase.from('training_logs')
+      .select('id, performed_date, duration_min, overall_rpe, notes, session_type, exercise_logs(exercise_name, set_number, reps, weight_kg, rpe, side, exercise_id), exercise_issues(exercise_name, zone, intensity)')
+      .eq('programmed_session_id', sessionId).order('recorded_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('external_load').select('*').eq('programmed_session_id', sessionId).order('created_at', { ascending: false }).limit(1).maybeSingle()
+  ])
+  return { log: must(log), load: must(load) }
+}
+
+export const fetchVolumeHistory = async from => must(await supabase.from('v_weekly_volume_fractional')
+  .select('week_start, muscle, fractional_sets').gte('week_start', from).order('week_start'))
+
+export const fetchE1rm = async () => must(await supabase.from('v_e1rm')
+  .select('exercise_id, exercise, performed_date, e1rm_epley, rpe_reliability').order('performed_date'))
+
+export const fetchWeightTrend = async () => must(await supabase.from('v_weight_trend_8w').select('date, weight_kg, ma_7d').order('date'))
+
+export const fetchRuns = async from => must(await supabase.from('external_load')
+  .select('date, distance_km, duration_min').eq('activity', 'run').gte('date', from).order('date'))
+
+export const fetchTibia = async from => must(await supabase.from('daily_checkins')
+  .select('date, tibia_score, recorded_at').not('tibia_score', 'is', null).gte('date', from).order('recorded_at'))

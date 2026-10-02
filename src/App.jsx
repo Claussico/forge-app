@@ -9,15 +9,9 @@ import CheckinScreen from './screens/CheckinScreen'
 import ActivityScreen from './screens/ActivityScreen'
 import TestsScreen from './screens/TestsScreen'
 import MeasurementsScreen from './screens/MeasurementsScreen'
-
-function Pending({ title }) {
-  return (
-    <div className="body">
-      <h1 className="h1">{title}</h1>
-      <p className="ctx">Llega en la release 2. Mientras tanto, el plan de la semana está en Hoy.</p>
-    </div>
-  )
-}
+import SessionDetailScreen from './screens/SessionDetailScreen'
+import WeekScreen from './screens/WeekScreen'
+import ProgressScreen from './screens/ProgressScreen'
 
 export default function App() {
   const { session, loading, signInWithPassword } = useAuth()
@@ -36,17 +30,18 @@ export default function App() {
   if (top === 'registrar') {
     if (sub === 'checkin') screen = <CheckinScreen />
     else if (sub === 'actividad') screen = <ActivityScreen sessionId={query.s} editId={id} />
-    else if (sub === 'tests') screen = <TestsScreen />
+    else if (sub === 'tests') screen = <TestsScreen sessionId={query.s} />
     else if (sub === 'medidas') screen = <MeasurementsScreen />
     else screen = <LogHub />
-  } else if (top === 'semana') screen = <Pending title="Semana" />
-  else if (top === 'progreso') screen = <Pending title="Progreso" />
+  } else if (top === 'ver' && sub) screen = <SessionDetailScreen id={sub} from={query.f} />
+  else if (top === 'semana') screen = <WeekScreen />
+  else if (top === 'progreso') screen = <ProgressScreen />
   else screen = <TodayScreen date={query.d} />
 
   return (
     <div className="app with-nav">
       <div className="screen" key={location.hash}>{screen}</div>
-      <NavBar current={top === 'hoy' || !top ? 'hoy' : top} />
+      <NavBar current={top === 'ver' ? (query.f || 'hoy') : top === 'hoy' || !top ? 'hoy' : top} />
     </div>
   )
 }

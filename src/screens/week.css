@@ -1,0 +1,23 @@
+.week-nav { display: flex; align-items: center; gap: 4px; }
+.week-nav .h1 { flex: 1; text-align: center; }
+.week-arrow { min-width: 48px; min-height: 48px; background: none; border: 0; color: var(--text-1); display: inline-flex; align-items: center; justify-content: center; }
+.week-day { width: 40px; flex-shrink: 0; color: var(--text-2); font-size: 14px; }
+.week-day.is-today { color: var(--text-0); font-weight: 600; }
+.week-name, .week-sub { display: block; }
+.week-name.is-off { color: var(--text-2); }
+.is-warn { color: var(--warn); }
+.is-err { color: var(--err); }
+
+.vol { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; }
+.vol-row { display: grid; grid-template-columns: 118px 1fr auto; align-items: center; gap: 10px; font-size: 14px; }
+.vol-m { color: var(--text-1); }
+.vol-v { color: var(--text-0); min-width: 64px; text-align: right; }
+.vol-note { margin-top: 2px; }
+.bar { height: 8px; border-radius: 4px; background: var(--bg-3); position: relative; overflow: hidden; display: block; }
+.bar span { position: absolute; inset: 0 auto 0 0; background: var(--text-2); border-radius: 4px; }
+
+/* Progreso */
+.prog-sec { display: flex; flex-direction: column; gap: 10px; padding-top: 4px; }
+.prog-sec + .prog-sec { border-top: 1px solid var(--line); padding-top: 16px; }
+.prog-title { font-size: 18px; font-weight: 600; color: var(--text-0); }
+.prog-test { display: flex; flex-direction: column; gap: 6px; }

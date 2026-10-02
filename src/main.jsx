@@ -18,13 +18,14 @@ registerSW({
   }
 })
 
-// Alto del armazón = pantalla real en la PWA instalada (iOS da un área más baja que la pantalla
-// cuando la barra de estado es translúcida). En el navegador normal se usa el alto de la ventana.
+// PWA de iOS con barra de estado translúcida: la zona que se pinta es más baja que la pantalla y
+// los últimos px solo muestran el fondo del documento (color de la barra). Esa franja ya cubre parte
+// de la zona segura inferior, así que la barra de pestañas descuenta su alto (--vp-gap en styles.css).
 const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches
 const fitHeight = () => {
   const portrait = window.innerWidth < window.innerHeight
-  const h = standalone && portrait ? Math.max(window.innerHeight, window.screen.height) : window.innerHeight
-  document.documentElement.style.setProperty('--app-h', h + 'px')
+  const gap = standalone && portrait ? Math.max(0, window.screen.height - window.innerHeight) : 0
+  document.documentElement.style.setProperty('--vp-gap', gap + 'px')
 }
 fitHeight()
 window.addEventListener('resize', fitHeight)

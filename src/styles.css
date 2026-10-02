@@ -24,7 +24,10 @@
   --ff-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --ff-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
   --r: 10px;
-  --safe-b: env(safe-area-inset-bottom, 0px);
+  /* Zona segura inferior útil. En la PWA de iOS con barra de estado translúcida, la página no se
+     pinta en los últimos --vp-gap px de la pantalla (iOS ahí solo muestra el fondo del documento,
+     que es el color de la barra); esa franja ya cubre parte de la zona segura. --vp-gap: main.jsx */
+  --safe-b: max(0px, calc(env(safe-area-inset-bottom, 0px) - var(--vp-gap, 0px)));
 }
 html[data-theme="light"] {
   color-scheme: light;
@@ -48,10 +51,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 #root {
-  /* Alto real de la pantalla (--app-h, calculado en main.jsx). En la PWA de iOS con la barra de
-     estado translúcida, el área de 'fixed'/100% es más baja que la pantalla en la altura de la
-     barra de estado: anclar a bottom: 0 deja un hueco bajo la barra de pestañas. */
-  position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); max-width: 480px; margin: 0 auto;
+  /* Ocupa exactamente la zona que iOS pinta (en la PWA puede ser más baja que la pantalla). */
+  position: fixed; inset: 0; max-width: 480px; margin: 0 auto;
   display: flex; flex-direction: column; overflow: hidden; background: var(--bg-0);
   padding-top: env(safe-area-inset-top, 0px); /* sin padding inferior: la zona segura de abajo la cubre la barra */
 }
@@ -135,7 +136,7 @@ textarea.text-in { min-height: 80px; resize: vertical; }
   position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; /* al fondo de #root, no del área corta */
   display: grid; grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--line); background: var(--bg-1);
-  padding-bottom: env(safe-area-inset-bottom, 0px); /* el fondo de la barra cubre la zona segura */
+  padding-bottom: var(--safe-b); /* la zona segura (o lo que no cubra ya la franja sin pintar de iOS) */
 }
 html.kb-open .nav { display: none; }
 .nav button { min-height: 56px; background: none; border: 0; color: var(--text-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 12px; }
@@ -154,7 +155,7 @@ html.kb-open .nav { display: none; }
 @media (prefers-reduced-motion: reduce) { .toast .drain { animation: none; } }
 
 /* Hoja inferior (sin modales: se usa para elegir fecha, ver la sesión entera…) */
-.sheet-back { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); background: rgba(0, 0, 0, 0.5); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-back { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: 100%; max-width: 480px; max-height: 85dvh; overflow-y: auto; background: var(--bg-0); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 12px; }
 .sheet h2 { font-size: 18px; color: var(--text-0); font-weight: 600; }
 

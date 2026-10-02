@@ -26,7 +26,7 @@
 .ses-done li .num { white-space: nowrap; }
 .ses-done .num { color: var(--text-1); }
 
-.console { flex-shrink: 0; border-top: 1px solid var(--line); background: var(--bg-1); padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px)); display: flex; flex-direction: column; gap: 8px; }
+.console { flex-shrink: 0; border-top: 1px solid var(--line); background: var(--bg-1); padding: 10px 12px calc(12px + var(--safe-b)); display: flex; flex-direction: column; gap: 8px; }
 .console-big { min-height: 64px; font-size: 18px; }
 .stepper { display: grid; grid-template-columns: 92px 56px 1fr 56px; align-items: center; gap: 6px; }
 .stepper .sl { font-size: 13px; color: var(--text-2); line-height: 1.2; }

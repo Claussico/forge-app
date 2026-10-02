@@ -20,15 +20,16 @@ export function buildSteps(exercises = []) {
     const sets = Number(t.sets) || 1
     const sides = t.per_side ? ['izquierdo', 'derecho'] : [null]
     for (let s = 1; s <= sets; s++) for (const side of sides) {
-      steps.push({ ex: i, name: ex.name, notes: ex.execution_notes, set: s, sets, side, seconds: t.seconds != null ? Number(t.seconds) : null, reps: t.seconds == null ? (t.reps ?? null) : null })
+      steps.push({ ex: i, name: ex.name, notes: ex.execution_notes, set: s, sets, side, kg: t.weight_kg || null, seconds: t.seconds != null ? Number(t.seconds) : null, reps: t.seconds == null ? (t.reps ?? null) : null })
     }
   })
   return steps
 }
 
 export const doseText = t => {
-  if (t.seconds != null) return `${t.sets ?? 1} × ${t.seconds} s${t.per_side ? ' por lado' : ''}`
-  return `${t.sets ?? 1} × ${t.reps ?? '?'} reps${t.per_side ? ' por lado' : ''}`
+  const kg = t.weight_kg ? ` · ${String(t.weight_kg).replace('.', ',')} kg` : ''
+  if (t.seconds != null) return `${t.sets ?? 1} × ${t.seconds} s${t.per_side ? ' por lado' : ''}${kg}`
+  return `${t.sets ?? 1} × ${t.reps ?? '?'} reps${t.per_side ? ' por lado' : ''}${kg}`
 }
 
 export default function MobilityScreen({ id }) {
@@ -149,7 +150,7 @@ export default function MobilityScreen({ id }) {
           </>
         ) : (
           <>
-            <div className="mob-clock num">{step.reps ?? '—'} <span className="t2">reps{step.side ? ' · lado ' + step.side : ''}</span></div>
+            <div className="mob-clock num">{step.reps ?? '—'} <span className="t2">reps{step.side ? ' · lado ' + step.side : ''}{step.kg ? ' · ' + fmtNum(step.kg) + ' kg' : ''}</span></div>
             <div className="mob-row">
               <button className="btn" onClick={prev} disabled={i === 0}>Anterior</button>
               <button className="btn btn--primary console-big" onClick={next}>Hecho</button>

@@ -5,6 +5,7 @@ import { fetchBriefing, fetchRecentLoads, fetchSessionsBetween, fetchSession, qu
 import { useData } from '../lib/hooks'
 import { today, addDays, fmtRelative } from '../lib/dates'
 import { Choice, NumField, fmtNum, go } from '../components/ui'
+import { timeTarget } from '../lib/sessions'
 import './forms.css'
 
 const ACTIVITIES = [
@@ -69,9 +70,9 @@ export default function ActivityScreen({ sessionId, editId }) {
           {linked && <div className="ctx">Enlazada a <b>{linked.session_name} · {fmtRelative(linked.scheduled_date)}</b>. Al guardar, la sesión queda hecha.</div>}
         </div>
 
-        {linked && linkedEx && (linkedEx.execution_notes || linkedEx.target?.reps) && (
+        {linked && linkedEx && (
           <div className="panel" style={{ padding: 14 }}>
-            <div className="t0">{linkedEx.name}{linkedEx.target?.reps ? ' · ' + linkedEx.target.reps : ''}</div>
+            <div className="t0">{linkedEx.name} · {timeTarget(linkedEx.target)}</div>
             {linkedEx.execution_notes && <p className="t2" style={{ marginTop: 4 }}>{linkedEx.execution_notes}</p>}
           </div>
         )}

@@ -6,7 +6,7 @@ import { kv } from '../lib/queue'
 import { useData } from '../lib/hooks'
 import { today, fmtRelative, daysBetween } from '../lib/dates'
 import { DateButton, Status, fmtNum, go } from '../components/ui'
-import { PHASE, TYPE_LABEL, startSession, startLabel, viewSession } from '../lib/sessions'
+import { PHASE, TYPE_LABEL, startSession, startLabel, viewSession, timeTarget } from '../lib/sessions'
 
 export default function TodayScreen({ date }) {
   const day = date || today()
@@ -35,7 +35,9 @@ export default function TodayScreen({ date }) {
         <DateButton value={day} onChange={d => go(d === today() ? '/hoy' : '/hoy?d=' + d)} />
         <div className="ctx">
           {blk
-            ? <><b>Bloque {blk.number} · {PHASE[blk.phase] || blk.phase}</b> · semana <span className="num">{blk.week_real}</span> de <span className="num">{blk.weeks_planned}</span>{isToday && <> · día <span className="num">{blk.day_in_week}</span></>}</>
+            ? blk.start_date > today()
+              ? <><b>Bloque {blk.number} · {PHASE[blk.phase] || blk.phase}</b> · empieza {fmtRelative(blk.start_date)}</>
+              : <><b>Bloque {blk.number} · {PHASE[blk.phase] || blk.phase}</b> · semana <span className="num">{blk.week_real}</span> de <span className="num">{blk.weeks_planned}</span>{isToday && <> · día <span className="num">{blk.day_in_week}</span></>}</>
             : b ? 'Sin bloque activo' : ' '}
           {!isToday && <> · <button className="link-btn" onClick={() => go('/hoy')}>Ir a hoy</button></>}
         </div>
@@ -70,7 +72,7 @@ export default function TodayScreen({ date }) {
             {s.status_note && <p className="t2">{s.status_note}</p>}
             {t === 'run' && ex[0] && (
               <>
-                <p className="t2">{[ex[0].target?.reps, ex[0].target?.distance_km != null && 'objetivo ' + fmtNum(ex[0].target.distance_km) + ' km'].filter(Boolean).join(' · ')}</p>
+                <p className="t2">{[ex[0].name, timeTarget(ex[0].target), ex[0].target?.distance_km != null && 'objetivo ' + fmtNum(ex[0].target.distance_km) + ' km'].filter(Boolean).join(' · ')}</p>
                 {ex[0].execution_notes && <p className="today-notes">{ex[0].execution_notes}</p>}
                 {cap != null && <div className="cap"><span>Tope de distancia (+10 % sobre la salida más larga)</span><span className="num">{fmtNum(cap)} km</span></div>}
               </>
@@ -95,7 +97,7 @@ export default function TodayScreen({ date }) {
             </div>
             <span className="btn btn--sm">{checkin ? 'Otro' : 'Hacer check-in'}</span>
           </button>
-          {blk && (
+          {blk && blk.start_date <= today() && (
             <div className="row">
               <div className="grow">
                 <div className="t0">Semana {blk.week_real}</div>

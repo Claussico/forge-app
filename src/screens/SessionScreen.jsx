@@ -9,6 +9,7 @@ import { kv } from '../lib/queue'
 import { useData, useWakeLock, haptic, alarm, unlockAudio } from '../lib/hooks'
 import { today, addDays, fmtRelative } from '../lib/dates'
 import { SyncBadge, Sheet, fmtNum, go, back } from '../components/ui'
+import { timeTarget } from '../lib/sessions'
 import './session.css'
 
 const RPES = [6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10]
@@ -26,16 +27,20 @@ export function buildPlan(session, catalog) {
     const conv = cat?.load_convention
       || (lt === 'bw' || lt === 'bodyweight_time' ? 'none' : lt === 'bw_weighted' ? 'added' : 'total')
     const sets = ex.sets || []
-    const nSets = sets.length
+    // Sin lista de series (p. ej. una plancha con target {sets, seconds}): salen del target.
+    // Un bloque informativo (calentamiento) trae target.sets = 0.
+    const nSets = sets.length || Number(t.sets) || 0
     return {
       i, name: ex.name, notes: ex.execution_notes, target: t, sets, nSets, info: nSets === 0,
       exerciseId: cat?.id || null,
       conv: pattern === 'jump' ? 'none' : conv,
       jump: pattern === 'jump',
+      // Sin RPE: saltos (spec §11) y trabajo de técnica, movilidad o flow dentro de una sesión de fuerza
+      noRpe: ['jump', 'locomotion', 'mobility', 'flow'].includes(pattern),
       unilateral: cat?.laterality === 'unilateral',
       time: lt === 'bodyweight_time',
       timeUnit: t.seconds != null ? 'segundos' : 'minutos',
-      rest: pattern === 'isolation' || pattern === 'jump' ? 75 : 150
+      rest: ['isolation', 'jump', 'locomotion', 'mobility', 'flow'].includes(pattern) ? 75 : 150
     }
   })
 }
@@ -44,7 +49,7 @@ function prescribed(e, k) {
   const s = e.sets[k] || {}
   return {
     w: e.conv === 'none' ? null : (s.weight_kg ?? e.target.weight_kg ?? e.target.weight ?? null),
-    r: s.reps ?? firstInt(e.target.reps)
+    r: s.reps ?? firstInt(e.target.reps) ?? firstInt(e.target.seconds)
   }
 }
 
@@ -52,8 +57,9 @@ export function targetText(e) {
   const t = e.target
   const w = t.weight_kg ?? t.weight
   const load = e.conv === 'none' || w == null ? '' : (e.conv === 'added' ? '+' : '') + fmtNum(w) + ' kg × '
-  const reps = e.jump ? `${t.reps ?? '?'} contactos` : e.time ? `${t.reps ?? t.seconds ?? '?'}` : `${t.reps ?? '?'}${e.unilateral ? ' por lado' : ''}`
-  return `${t.sets ?? e.nSets} × ${load}${reps}${!e.jump && t.rpe ? ' · RPE ' + fmtNum(t.rpe) : ''}`
+  if (e.time) return `${timeTarget(t)}${e.unilateral || t.per_side ? ' por lado' : ''}${!e.noRpe && t.rpe ? ' · RPE ' + fmtNum(t.rpe) : ''}`
+  const reps = e.jump ? `${t.reps ?? '?'} contactos` : e.time ? (t.seconds != null ? `${t.seconds} s` : `${t.reps ?? '?'} min`) : `${t.reps ?? '?'}${e.unilateral ? ' por lado' : ''}`
+  return `${t.sets ?? e.nSets} × ${load}${reps}${!e.noRpe && t.rpe ? ' · RPE ' + fmtNum(t.rpe) : ''}`
 }
 
 function lastText(e, last) {
@@ -71,7 +77,8 @@ function lastText(e, last) {
 export default function SessionScreen({ id }) {
   useWakeLock(true)
   const { data: session, error } = useData('session:' + id, () => fetchSession(id), [id])
-  const { data: catalog } = useData('catalog', fetchCatalog)
+  const { data: catalog, error: catError } = useData('catalog', fetchCatalog)
+  const catReady = !!catalog || !!catError // sin red ni copia del catálogo: se sigue con lo que trae la sesión
   const plan = useMemo(() => buildPlan(session, catalog), [session, catalog])
   const ids = useMemo(() => plan.map(e => e.exerciseId).filter(Boolean), [plan])
   const { data: lastTimes } = useData('last:' + ids.join(','), () => fetchLastTimes(ids), [ids.join(',')])
@@ -86,7 +93,7 @@ export default function SessionScreen({ id }) {
 
   // Cargar o crear el borrador
   useEffect(() => {
-    if (!plan.length || d) return
+    if (!plan.length || !catReady || d) return
     kv.get('draft:' + id).then(saved => {
       if (saved) return setD(saved)
       const ei = Math.max(0, plan.findIndex(e => !e.info))
@@ -94,7 +101,7 @@ export default function SessionScreen({ id }) {
       setD({ clientId: crypto.randomUUID(), ei: plan[0]?.info ? 0 : ei, si: 0, logged: [], restEnd: null, side: null,
         cur: first ? prescribed(first, 0) : { w: null, r: null }, started: Date.now() })
     })
-  }, [plan, id, d])
+  }, [plan, id, d, catReady])
 
   useEffect(() => { if (d) kv.set('draft:' + id, d).catch(() => {}) }, [d, id])
 
@@ -109,7 +116,7 @@ export default function SessionScreen({ id }) {
   }, [restLeft])
 
   if (error && !session) return <div className="body"><p className="err-text">No se pudo cargar la sesión: {error.message}</p><button className="btn" onClick={() => go('/hoy')}>Volver a Hoy</button></div>
-  if (!session || !d) return <div className="loading">Cargando sesión…</div>
+  if (!session || !catReady || !d) return <div className="loading">Cargando sesión…</div>
 
   const e = plan[d.ei]
   const totalSets = plan.reduce((a, x) => a + x.nSets, 0)
@@ -143,7 +150,7 @@ export default function SessionScreen({ id }) {
         exercise_name: e.name, exercise_id: e.exerciseId, set_number: prev.si + 1,
         reps: prev.cur.r ?? 0,
         weight_kg: e.conv === 'none' ? null : prev.cur.w,
-        rpe: e.jump ? null : rpe, rir: null,
+        rpe: e.noRpe ? null : rpe, rir: null,
         side: e.unilateral ? prev.side : null,
         is_calibration: false, to_failure: false, notes: null
       }
@@ -194,7 +201,7 @@ export default function SessionScreen({ id }) {
   // ---------- Render ----------
   const done = loggedOf(e?.name || '')
   const last = e && lastText(e, lastTimes?.[e.exerciseId])
-  const repsLabel = e?.jump ? 'contactos' : e?.time ? e.timeUnit : e?.unilateral ? 'reps por lado' : 'reps'
+  const repsLabel = e?.jump ? 'contactos' : e?.time ? e.timeUnit + (e.unilateral ? ' por lado' : '') : e?.unilateral ? 'reps por lado' : 'reps'
   const wStep = 2.5
 
   return (
@@ -269,7 +276,7 @@ export default function SessionScreen({ id }) {
                 ))}
               </div>
             )}
-            {e.jump ? (
+            {e.noRpe ? (
               <button className="btn btn--primary btn--block console-big" onClick={() => logSet(null)}>Hecho</button>
             ) : (
               <>

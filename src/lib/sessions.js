@@ -28,3 +28,9 @@ export function startLabel(s, hasDraft) {
   if (t === 'tests') return 'Registrar tests'
   return 'Empezar sesión'
 }
+
+// Objetivo de un ejercicio por tiempo (loading_type bodyweight_time): reps son minutos, o seconds.
+export function timeTarget(t = {}) {
+  const n = Number(t.sets) > 1 ? `${t.sets} × ` : ''
+  return t.seconds != null ? `${n}${t.seconds} s` : `${n}${t.reps ?? '?'} min`
+}

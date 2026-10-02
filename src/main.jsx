@@ -18,6 +18,18 @@ registerSW({
   }
 })
 
+// Alto del armazón = pantalla real en la PWA instalada (iOS da un área más baja que la pantalla
+// cuando la barra de estado es translúcida). En el navegador normal se usa el alto de la ventana.
+const standalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches
+const fitHeight = () => {
+  const portrait = window.innerWidth < window.innerHeight
+  const h = standalone && portrait ? Math.max(window.innerHeight, window.screen.height) : window.innerHeight
+  document.documentElement.style.setProperty('--app-h', h + 'px')
+}
+fitHeight()
+window.addEventListener('resize', fitHeight)
+window.addEventListener('orientationchange', fitHeight)
+
 // Teclado abierto en iOS: se oculta la barra de pestañas (fija, flotaría sobre el teclado) y al
 // cerrarlo se devuelve la ventana a su sitio, porque iOS la desplaza para enseñar el campo.
 if (window.visualViewport) {

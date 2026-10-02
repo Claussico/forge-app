@@ -48,8 +48,10 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 #root {
-  /* fixed + inset 0: ocupa la pantalla real del iPhone sin depender de 100dvh */
-  position: fixed; inset: 0; max-width: 480px; margin: 0 auto;
+  /* Alto real de la pantalla (--app-h, calculado en main.jsx). En la PWA de iOS con la barra de
+     estado translúcida, el área de 'fixed'/100% es más baja que la pantalla en la altura de la
+     barra de estado: anclar a bottom: 0 deja un hueco bajo la barra de pestañas. */
+  position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); max-width: 480px; margin: 0 auto;
   display: flex; flex-direction: column; overflow: hidden; background: var(--bg-0);
   padding-top: env(safe-area-inset-top, 0px); /* sin padding inferior: la zona segura de abajo la cubre la barra */
 }
@@ -130,7 +132,7 @@ textarea.text-in { min-height: 80px; resize: vertical; }
 .foot { padding: 12px 16px calc(12px + var(--safe-b)); background: var(--bg-0); border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
 .with-nav .foot { padding-bottom: 12px; }
 .nav {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; max-width: 480px; margin: 0 auto;
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 30; /* al fondo de #root, no del área corta */
   display: grid; grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--line); background: var(--bg-1);
   padding-bottom: env(safe-area-inset-bottom, 0px); /* el fondo de la barra cubre la zona segura */
@@ -152,7 +154,7 @@ html.kb-open .nav { display: none; }
 @media (prefers-reduced-motion: reduce) { .toast .drain { animation: none; } }
 
 /* Hoja inferior (sin modales: se usa para elegir fecha, ver la sesión entera…) */
-.sheet-back { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.5); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
+.sheet-back { position: fixed; top: 0; left: 0; right: 0; height: var(--app-h, 100dvh); background: rgba(0, 0, 0, 0.5); z-index: 40; display: flex; align-items: flex-end; justify-content: center; }
 .sheet { width: 100%; max-width: 480px; max-height: 85dvh; overflow-y: auto; background: var(--bg-0); border-top: 1px solid var(--line); border-radius: 16px 16px 0 0; padding: 16px 16px calc(16px + var(--safe-b)); display: flex; flex-direction: column; gap: 12px; }
 .sheet h2 { font-size: 18px; color: var(--text-0); font-weight: 600; }
 

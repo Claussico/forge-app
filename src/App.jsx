@@ -44,7 +44,7 @@ export default function App() {
   else screen = <TodayScreen date={query.d} />
 
   return (
-    <div className="screen with-nav">
+    <div className="app with-nav">
       <div className="screen" key={location.hash}>{screen}</div>
       <NavBar current={top === 'hoy' || !top ? 'hoy' : top} />
     </div>

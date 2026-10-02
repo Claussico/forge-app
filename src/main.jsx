@@ -18,6 +18,18 @@ registerSW({
   }
 })
 
+// Teclado abierto en iOS: se oculta la barra de pestañas (fija, flotaría sobre el teclado) y al
+// cerrarlo se devuelve la ventana a su sitio, porque iOS la desplaza para enseñar el campo.
+if (window.visualViewport) {
+  const vv = window.visualViewport
+  const onResize = () => {
+    const open = window.innerHeight - vv.height > 120
+    document.documentElement.classList.toggle('kb-open', open)
+    if (!open) window.scrollTo(0, 0)
+  }
+  vv.addEventListener('resize', onResize)
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />

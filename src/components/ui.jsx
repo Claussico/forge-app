@@ -128,3 +128,9 @@ export function Status({ status, late }) {
   const [cls, txt] = map[status] || map.planned
   return <span className={'st st--' + cls}><i />{txt}</span>
 }
+
+// Demostración del ejercicio (exercise_catalog.demo_url): enlace externo, nada incrustado.
+export function DemoLink({ url }) {
+  if (!url || !/^https:\/\//i.test(url.trim())) return null
+  return <a className="demo-link" href={url.trim()} target="_blank" rel="noopener noreferrer">Ver demostración</a>
+}

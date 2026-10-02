@@ -1,11 +1,11 @@
 // Movilidad y flow guiados (spec §9). Se registra con un solo "Hecha", sin series:
 // la base de datos calcula la dosis por zona a partir de lo prescrito.
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { fetchSession, fetchBriefing, queueTrainingLog } from '../lib/api'
+import { fetchSession, fetchBriefing, fetchCatalog, lookup, queueTrainingLog } from '../lib/api'
 import { kv } from '../lib/queue'
 import { useData, useWakeLock, haptic, alarm, unlockAudio } from '../lib/hooks'
 import { today, addDays, fmtRelative } from '../lib/dates'
-import { Sheet, SyncBadge, fmtNum, go, back } from '../components/ui'
+import { Sheet, SyncBadge, DemoLink, fmtNum, go, back } from '../components/ui'
 import './session.css'
 import './forms.css'
 
@@ -36,6 +36,7 @@ export default function MobilityScreen({ id }) {
   useWakeLock(true)
   const { data: session, error } = useData('session:' + id, () => fetchSession(id), [id])
   const { data: b } = useData('briefing', fetchBriefing)
+  const { data: catalog } = useData('catalog', fetchCatalog)
   const steps = useMemo(() => buildSteps(session?.exercises), [session])
   const [i, setI] = useState(0)
   const [endAt, setEndAt] = useState(null)
@@ -108,6 +109,7 @@ export default function MobilityScreen({ id }) {
             <h1 className="ses-name">{step.name}</h1>
             <div className="ses-of">Serie <span className="num">{step.set}</span> de <span className="num">{step.sets}</span>{step.side && <> · lado <b>{step.side}</b></>}</div>
             {step.notes && <p className="ses-notes">{step.notes}</p>}
+            <DemoLink url={lookup(catalog, step.name)?.demo_url} />
           </>
         ) : (
           <>

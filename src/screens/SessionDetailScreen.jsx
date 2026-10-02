@@ -2,12 +2,12 @@
 // - planificada: su contenido y el botón para hacerla (también adelantada o atrasada) u omitirla;
 // - hecha: lo que se registró (series, molestias, carrera o movilidad).
 import { useEffect, useMemo, useState } from 'react'
-import { fetchSession, fetchCatalog, fetchSessionRecord, queueSkipSession } from '../lib/api'
+import { fetchSession, fetchCatalog, fetchSessionRecord, queueSkipSession, lookup } from '../lib/api'
 import { kv } from '../lib/queue'
 import { useData } from '../lib/hooks'
 import { today, fmtDay, fmtRelative } from '../lib/dates'
 import { TYPE_LABEL, typeOf, isMobility, startSession, startLabel } from '../lib/sessions'
-import { Status, Sheet, Icon, fmtNum, go, back } from '../components/ui'
+import { Status, Sheet, Icon, DemoLink, fmtNum, go, back } from '../components/ui'
 import { buildPlan, targetText } from './SessionScreen'
 import { doseText } from './MobilityScreen'
 
@@ -101,6 +101,7 @@ export default function SessionDetailScreen({ id, from = 'hoy' }) {
                 <div className="row detail-row" key={k}>
                   <div className="today-meta"><span className="t0">{ex.name}</span><span className="t2 num">{tx}</span></div>
                   {ex.execution_notes && <p className="t2">{ex.execution_notes}</p>}
+                  <DemoLink url={lookup(catalog, ex.name)?.demo_url} />
                 </div>
               )
             })}

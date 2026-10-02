@@ -8,7 +8,7 @@ import { fetchSession, fetchCatalog, fetchLastTimes, lookup, queueTrainingLog } 
 import { kv } from '../lib/queue'
 import { useData, useWakeLock, haptic, alarm, unlockAudio } from '../lib/hooks'
 import { today, addDays, fmtRelative } from '../lib/dates'
-import { SyncBadge, Sheet, fmtNum, go, back } from '../components/ui'
+import { SyncBadge, Sheet, DemoLink, fmtNum, go, back } from '../components/ui'
 import { timeTarget } from '../lib/sessions'
 import './session.css'
 
@@ -239,6 +239,7 @@ export default function SessionScreen({ id }) {
               {e.notes && <button onClick={() => setSheet(sheet === 'notes' ? null : 'notes')} aria-expanded={sheet === 'notes'}>Notas técnicas</button>}
               <button onClick={() => setSheet('table')}>Ver toda la sesión</button>
               <button onClick={() => { setIssue({ zone: null, intensity: null }); setSheet('issue') }}>Molestia</button>
+              <DemoLink url={lookup(catalog, e.name)?.demo_url} />
             </div>
             {sheet === 'notes' && <p className="ses-notes">{e.notes}</p>}
             {(d.issues || []).filter(i => i.exercise_name === e.name).map((i, k) => (

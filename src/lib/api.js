@@ -55,7 +55,7 @@ export const fetchSession = async id =>
 // Catálogo por nombre y alias (en minúsculas). Es estático: se cachea con useData.
 export async function fetchCatalog() {
   const [cat, alias] = await Promise.all([
-    supabase.from('exercise_catalog').select('id, name, pattern, loading_type, laterality, load_convention, equipment, mobility_zones').eq('active', true),
+    supabase.from('exercise_catalog').select('id, name, pattern, loading_type, laterality, load_convention, equipment, mobility_zones, demo_url').eq('active', true),
     supabase.from('exercise_alias').select('alias, exercise_id')
   ])
   const byId = Object.fromEntries(must(cat).map(c => [c.id, c]))
